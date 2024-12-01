@@ -24,7 +24,7 @@ class EditProfileController extends Controller
 
                 'name' => 'required|string',
                 'email'=> 'required|unique:users,email,' . $userId
-              
+
                 //   'image' => 'required',
             ],
             [
@@ -38,7 +38,7 @@ class EditProfileController extends Controller
             return response()->json([
                 'message' => $validator->errors()->first(),
                 'status' => 422
-            ]);
+            ],422);
         }
 
         try {
@@ -53,7 +53,7 @@ class EditProfileController extends Controller
             }
 
             $users = User::where('id', auth('user-api')->user()->id)->update([
-                
+
                 'name' => $request->name,
                 'email' => $request->email,
                 'is_completed' => '1',
@@ -68,7 +68,7 @@ class EditProfileController extends Controller
             // Rollback all operations if an error occurs
             DB::rollBack();
 
-            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 400);
         }
     }
     public function change_password(Request $request)
@@ -87,7 +87,7 @@ class EditProfileController extends Controller
             return response()->json([
                 'message' => $validator->errors()->first(),
                 'status' => 422
-            ]);
+            ],422);
         }
         $user = Auth::guard('user-api')->user();
 
