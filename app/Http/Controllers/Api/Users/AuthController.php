@@ -45,7 +45,7 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password),
                 'phone' => $request->phone,
                 'name' => $request->name,
-                'sign_in_type'=>$request->sign_in_type,
+                'sign_in_type' => $request->sign_in_type,
             ]);
             $code = mt_rand(100000, 999999);
             $user_verification = UserVerification::create([
@@ -78,7 +78,7 @@ class AuthController extends Controller
             // Rollback all operations if an error occurs
             DB::rollBack();
 
-            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 400);
         }
     }
     public function login(Request $request)
@@ -109,8 +109,7 @@ class AuthController extends Controller
             $user->device_token = $request->device_token;
             $user->save();
             $user_otp = UserVerification::where('user_id', $user->id)->latest()->first();
-            if($user_otp)
-            {
+            if ($user_otp) {
                 $user_otp->delete();
             }
 
@@ -140,7 +139,7 @@ class AuthController extends Controller
                 'code' => $code,
                 'status' => '200',
 
-                'email' => $request->phone,
+                'phone' => $request->phone,
             ]);
         } catch (Exception $e) {
             // Rollback all operations if an error occurs
@@ -226,5 +225,4 @@ class AuthController extends Controller
             'data' => $user,
         ));
     }
-
 }
