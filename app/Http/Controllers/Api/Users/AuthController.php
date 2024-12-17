@@ -145,7 +145,7 @@ class AuthController extends Controller
             // Rollback all operations if an error occurs
             DB::rollBack();
 
-            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Failed to create user: ' . $e->getMessage()], 400);
         }
     }
     public function check_otp(Request $request)
