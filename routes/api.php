@@ -3,10 +3,12 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\Specialists\SpecialistController;
 use App\Http\Controllers\Api\Users\AuthController;
 use App\Http\Controllers\Api\Users\EditProfileController;
 use App\Http\Controllers\Api\Users\ResetPasswordController;
 use App\Http\Controllers\Api\Users\ForgotPasswordController;
+use App\Models\Specialist;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,4 +50,27 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::post('add_order', [HomeController::class, 'add_order'])->name('add_order');
         Route::post('add_coupoun', [HomeController::class, 'add_coupoun'])->name('add_coupoun');
     });
+    Route::group(['namespace' => 'auth-specialist'], function () {
+
+        Route::post('specialist/register', [SpecialistController::class, 'register']);
+        Route::post('specialist/login', [SpecialistController::class, 'login']);
+     
+        Route::post('specialist/check/code', [SpecialistController::class, 'check_otp']);
+        Route::get('specialist/getUserById/{id}', [AuthController::class, 'getUserById']);
+        Route::post('specialist/data',  [SpecialistController::class, 'get_all_data']);
+        Route::post('specialist/password/reset', [ResetPasswordController::class, 'code']);
+    });
+    Route::group(['middleware' => 'checkUser:specialist-api'], function () {
+        // Route::post('user/logout', [AuthController::class, 'logout']);
+        Route::get('specialist/getSpecialistData', [SpecialistController::class, 'getSpecialistData']);
+        // Route::post('user/edit', [EditProfileController::class, 'Editprofile']);
+        // Route::post('user/change_password', [EditProfileController::class, 'change_password'])->middleware('checkUser:user-api');
+        // Route::post('user/rate', [HomeController::class, 'add_rate']);
+        // Route::get('user_notifications', [HomeController::class, 'userNotifications'])->name('userNotifications');
+        // Route::get('read_notifications', [HomeController::class, 'read_notifications'])->name('read_notifications');
+        // Route::post('add_order', [HomeController::class, 'add_order'])->name('add_order');
+        // Route::post('add_coupoun', [HomeController::class, 'add_coupoun'])->name('add_coupoun');
+        Route::get('specialist/orders', [SpecialistController::class, 'get_all_orders_for_user']);
+    });
+
 });

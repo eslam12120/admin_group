@@ -84,7 +84,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'phone' => 'required|exists:users,phone',
+            'email' => 'required|exists:users,email',
             'password' => 'required|string|max:50',
         ], [
             'phone.required' => trans('auth.phone.register'),
@@ -99,13 +99,13 @@ class AuthController extends Controller
         }
         DB::beginTransaction();
         try {
-            $credentials = request(['phone', 'password']);
-            if (! $token = auth::guard('user-api')->attempt($credentials)) {
+            $credentials = request(['email', 'password']);
+            if (! $token = auth::guard('specialist-api')->attempt($credentials)) {
 
-                return response()->json(['message' => trans('auth.login.failed')], 401);
+                return response()->json(['message' => trans('هناك خطا في كلمه السر')], 401);
             }
 
-            $user = User::where('phone', $request->phone)->first();
+            $user = User::where('email', $request->email)->first();
             $user->device_token = $request->device_token;
             $user->save();
             $user_otp = UserVerification::where('user_id', $user->id)->latest()->first();
@@ -154,11 +154,11 @@ class AuthController extends Controller
             $request->all(),
             [
                 'code' => 'required',
-                'phone' => 'required',
+                'email' => 'required',
 
             ],
             [
-                'phone.required' => trans('auth.phone.register'),
+                'email.required' => trans('auth.phone.register'),
                 'code.required' => trans('auth.code.required'),
                 'code.exists' => trans('auth.code.exists'),
 
@@ -167,9 +167,9 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
-        $user = User::where('phone', $request->phone)->first();
+        $user = User::where('email', $request->email)->first();
         if (!$user) {
-            return response()->json(['message' => "هناك خطا في رقم الهاتف"], 422);
+            return response()->json(['message' => "هناك خطا في الايميل"], 422);
         }
 
         $user_otp = UserVerification::where('user_id', $user->id)->latest()->first();
