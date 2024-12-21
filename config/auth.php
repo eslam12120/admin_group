@@ -44,6 +44,10 @@ return [
             'driver' => 'jwt',
             'provider' => 'users'
         ],
+        'specialist-api' => [
+            'driver' => 'jwt',
+            'provider' => 'specialists'
+        ],
     ],
 
     /*
@@ -67,6 +71,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
+        ],
+        'specialists' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Specialist::class,
         ],
 
         // 'users' => [

@@ -8,4 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class SpecialistSpecial extends Model
 {
     use HasFactory;
+    protected $guarded = [];
+    public function specials()
+    {
+        return $this->belongsTo(Special::class, 'special_id');
+    }
 }
