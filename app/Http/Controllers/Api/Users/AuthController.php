@@ -100,7 +100,7 @@ class AuthController extends Controller
         DB::beginTransaction();
         try {
             $credentials = request(['email', 'password']);
-            if (! $token = auth::guard('specialist-api')->attempt($credentials)) {
+            if (! $token = auth::guard('user-api')->attempt($credentials)) {
 
                 return response()->json(['message' => trans('هناك خطا في كلمه السر')], 401);
             }
@@ -108,6 +108,7 @@ class AuthController extends Controller
             $user = User::where('email', $request->email)->first();
             $user->device_token = $request->device_token;
             $user->save();
+             if($user->is_verify == '0'){
             $user_otp = UserVerification::where('user_id', $user->id)->latest()->first();
             if ($user_otp) {
                 $user_otp->delete();
@@ -135,12 +136,13 @@ class AuthController extends Controller
             // ));
 
             DB::commit();
-            return response()->json([
-                'code' => $code,
-                'status' => '200',
-
-                'phone' => $request->phone,
-            ]);
+            $token=null;
+            return $this->respondWithToken_otp($token , $code);
+             }
+           else{
+                $token = auth()->guard('user-api')->login($user);
+                return $this->respondWithToken($token); 
+           }
         } catch (Exception $e) {
             // Rollback all operations if an error occurs
             DB::rollBack();
@@ -181,6 +183,7 @@ class AuthController extends Controller
             $token = auth()->guard('user-api')->login($user);
             $user_otp->delete();
             $user->device_token = $request->device_token;
+             $user->is_verify = '1';
             $user->save();
             return $this->respondWithToken($token);
         } else {
@@ -196,6 +199,17 @@ class AuthController extends Controller
             'status' => 200,
             'message' => trans('auth.login.success'),
             'user' => Auth::guard('user-api')->user(),
+        ]);
+    }
+      protected function respondWithToken_otp($token,$code)
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'status' => 200,
+            'message' => trans('auth.login.success'),
+            'user' => Auth::guard('user-api')->user(),
+            'code'=>$code
         ]);
     }
     public function logout(Request $request)

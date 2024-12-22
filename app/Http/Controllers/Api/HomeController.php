@@ -126,105 +126,98 @@ class HomeController extends Controller
             'data' => $specialists,
         ], 200);
     }
-    public function sort_by(Request $request)
-    {
-        $lang = $request->lang;
-        if ($request->sort == 'min') {
-            $specialist = Specialist::where('status', '1')->with([
-                'city' => function ($q) use ($lang) {
-                    $q->select('id', 'name_' . $lang . ' as name');
-                }
-            ])->orderBy('price', 'asc')->get()->map(function ($specialist) use ($lang) {
-                $specialist->image_url = asset('specialist_images/' . $specialist->image);
-                $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')->where('specialist_id', $specialist->id)->get();
-                return $specialist;
-            });
-        } elseif ($request->sort == 'max') {
-            $specialist = Specialist::where('status', '1')->with([
-                'city' => function ($q) use ($lang) {
-                    $q->select('id', 'name_' . $lang . ' as name');
-                }
-            ])->orderBy('price', 'desc')->get()->map(function ($specialist) use ($lang) {
-                $specialist->image_url = asset('specialist_images/' . $specialist->image);
-                $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')->where('specialist_id', $specialist->id)->get();
-                return $specialist;
-            });
-        } elseif ($request->sort == 'rating') {
-            $specialist = Specialist::where('status', '1')->with([
-                'city' => function ($q) use ($lang) {
-                    $q->select('id', 'name_' . $lang . ' as name');
-                }
-            ])->orderBy('rate', 'desc')->get()->map(function ($specialist) use ($lang) {
-                $specialist->image_url = asset('specialist_images/' . $specialist->image);
-                $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')->where('specialist_id', $specialist->id)->get();
-                return $specialist;
-            });
-        } else {
-            $specialist = Specialist::where('status', '1')->with([
-                'city' => function ($q) use ($lang) {
-                    $q->select('id', 'name_' . $lang . ' as name');
-                }
-            ])->orderBy('price', 'asc')->get()->map(function ($specialist) use ($lang) {
-                $specialist->image_url = asset('specialist_images/' . $specialist->image);
-                $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')->where('specialist_id', $specialist->id)->get();
-                return $specialist;
-            });
-        }
-        return response()->json([
-            'message' => 'success',
-            'data' => $specialist,
-        ], 200);
+   public function sort_by(Request $request)
+{
+    $lang = $request->lang;
+    $sortColumn = 'price'; // Default sorting column
+    $sortOrder = 'asc';    // Default sorting order
+
+    // Determine sorting criteria
+    if ($request->sort == 'min') {
+        $sortColumn = 'price';
+        $sortOrder = 'asc';
+    } elseif ($request->sort == 'max') {
+        $sortColumn = 'price';
+        $sortOrder = 'desc';
+    } elseif ($request->sort == 'rating') {
+        $sortColumn = 'rate';
+        $sortOrder = 'desc';
     }
-    public function filter_by(Request $request)
-    {
-        $lang = $request->lang;
-        $query = Specialist::query()->where('status', '1')->with([
+
+    // Fetch and paginate specialists
+    $specialists = Specialist::where('status', '1')
+        ->with([
+            'city' => function ($q) use ($lang) {
+                $q->select('id', 'name_' . $lang . ' as name');
+            }
+        ])
+        ->orderBy($sortColumn, $sortOrder)
+        ->paginate(30)
+        ->through(function ($specialist) use ($lang) {
+            $specialist->image_url = asset('specialist_images/' . $specialist->image);
+            $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
+            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')
+                ->where('specialist_id', $specialist->id)
+                ->get();
+            return $specialist;
+        });
+
+    return response()->json([
+        'message' => 'success',
+        'data' => $specialists,
+    ], 200);
+}
+  public function filter_by(Request $request)
+{
+    $lang = $request->lang;
+    $query = Specialist::query()
+        ->where('status', '1')
+        ->with([
             'city' => function ($q) use ($lang) {
                 $q->select('id', 'name_' . $lang . ' as name');
             }
         ]);
 
-        // Apply filters if provided
-        if ($request->has('special_id')) {
-            $special = SpecialistSpecial::where('special_id', $request->special_id)->pluck('specialist_id');
-            $query->whereIn('id', $special);
-        }
-
-        if ($request->has('city_id')) {
-            $query->where('city_id', $request->city_id);
-        }
-
-        if ($request->has('gov_id')) {
-            $query->where('gov_id', $request->gov_id);
-        }
-
-        if ($request->has('rate')) {
-            $query->where('rate', $request->rate);
-        }
-
-        if ($request->has('min_price') && $request->has('max_price')) {
-            $query->whereBetween('price', [$request->min_price, $request->max_price]);
-        }
-
-        // Sort specialists by the desired criteria (e.g., rating or price)
-        $query->orderBy('rate', 'desc'); // Example: Sort by rating
-
-        // Get paginated or filtered results
-        $specialists = $query->get()->map(function ($specialist) use ($lang) {
-            $specialist->image_url = asset('specialist_images/' . $specialist->image);
-            $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')->where('specialist_id', $specialist->id)->get();
-            return $specialist;
-        }); // or ->get();
-        return response()->json([
-            'message' => 'success',
-            'data' => $specialists,
-        ], 200);
+    // Apply filters if provided
+    if ($request->has('special_id')) {
+        $special = SpecialistSpecial::where('special_id', $request->special_id)->pluck('specialist_id');
+        $query->whereIn('id', $special);
     }
+
+    if ($request->has('city_id')) {
+        $query->where('city_id', $request->city_id);
+    }
+
+    if ($request->has('gov_id')) {
+        $query->where('gov_id', $request->gov_id);
+    }
+
+    if ($request->has('rate')) {
+        $query->where('rate', $request->rate);
+    }
+
+    if ($request->has('min_price') && $request->has('max_price')) {
+        $query->whereBetween('price', [$request->min_price, $request->max_price]);
+    }
+
+    // Sort specialists by the desired criteria (default: rating)
+    $query->orderBy('rate', 'desc');
+
+    // Fetch and paginate specialists
+    $specialists = $query->paginate(30)->through(function ($specialist) use ($lang) {
+        $specialist->image_url = asset('specialist_images/' . $specialist->image);
+        $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
+        $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')
+            ->where('specialist_id', $specialist->id)
+            ->get();
+        return $specialist;
+    });
+
+    return response()->json([
+        'message' => 'success',
+        'data' => $specialists,
+    ], 200);
+}
 
     public function add_order(Request $request)
     {
