@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('specialists', function (Blueprint $table) {
+        Schema::table('notifications', function (Blueprint $table) {
             $table->bigInteger('specialist_id')->nullable();
         });
     }
