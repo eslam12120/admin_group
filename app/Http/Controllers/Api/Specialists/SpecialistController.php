@@ -27,7 +27,7 @@ class SpecialistController extends Controller
 {
     public function register(Request $request)
     {
-    
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|email|unique:specialists,email',
@@ -154,11 +154,11 @@ class SpecialistController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|exists:specialists,email',
-    
+
         ], [
             'email.required' => trans('auth.email.register'),
 
-       
+
 
         ]);
         if ($validator->fails()) {
@@ -166,32 +166,30 @@ class SpecialistController extends Controller
         }
         DB::beginTransaction();
         try {
-       
+
 
             $user = specialist::where('email', $request->email)->first();
-            // $user->device_token = $request->device_token;
-            // $user->save();
-            $user_otp = SpecialistVerification::where('specialist_id', $user->id)->latest()->first();
-            if ($user_otp) {
-                $user_otp->delete();
+            $user->device_token = $request->device_token;
+            $user->save();
+            if ($user->is_verify == '0') {
+                $user_otp = SpecialistVerification::where('specialist_id', $user->id)->latest()->first();
+                if ($user_otp) {
+                    $user_otp->delete();
+                }
+
+                $code = mt_rand(100000, 999999);
+                $user_verification = SpecialistVerification::create([
+
+                    'specialist_id' => $user->id,
+                    'code' => $code,
+                ]);
+                DB::commit();
+                $token = null;
+                return $this->respondWithToken_otp($token, $code);
+            } else {
+                $token = auth()->guard('user-api')->login($user);
+                return $this->respondWithToken($token);
             }
-
-            $code = mt_rand(100000, 999999);
-            $user_verification = SpecialistVerification::create([
-
-                'specialist_id' => $user->id,
-                'code' => $code,
-
-
-
-            ]);
-            DB::commit();
-            return response()->json([
-                'code' => $code,
-                'status' => '200',
-
-                'email' => $request->email,
-            ]);
         } catch (Exception $e) {
             // Rollback all operations if an error occurs
             DB::rollBack();
@@ -211,7 +209,7 @@ class SpecialistController extends Controller
             [
                 'phone.required' => trans('auth.phone.register'),
                 'email.required' => trans('auth.code.required'),
-              
+
 
             ]
         );
@@ -231,8 +229,8 @@ class SpecialistController extends Controller
         if ($user_otp->code == $request->code) {
             $token = auth()->guard('specialist-api')->login($user);
             $user_otp->delete();
-            // $user->device_token = $request->device_token;
-            // $user->save();
+            $user->device_token = $request->device_token;
+            $user->save();
             return $this->respondWithToken($token);
         } else {
 
@@ -247,6 +245,17 @@ class SpecialistController extends Controller
             'status' => 200,
             'message' => trans('auth.login.success'),
             'user' => Auth::guard('specialist-api')->user(),
+        ]);
+    }
+    protected function respondWithToken_otp($token, $code)
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'status' => 200,
+            'message' => trans('auth.login.success'),
+            'user' => Auth::guard('specialist-api')->user(),
+            'code' => $code
         ]);
     }
     public function logout(Request $request)
@@ -266,23 +275,21 @@ class SpecialistController extends Controller
     }
     public function get_all_data()
     {
-        $city=City::select('id', 'name_' . app()->getLocale() . ' as name')->get();
+        $city = City::select('id', 'name_' . app()->getLocale() . ' as name')->get();
         $government = Government::select('id', 'name_' . app()->getLocale() . ' as name')->get();
         $languages = Language::select('id', 'name_' . app()->getLocale() . ' as name')->get();
-        $specials=Special::select('id', 'name_' . app()->getLocale() . ' as name', 'job_name_ar', 'job_name_en')->get();
+        $specials = Special::select('id', 'name_' . app()->getLocale() . ' as name', 'job_name_ar', 'job_name_en')->get();
         return response()->json([
             'message' => 'success',
             'cities' =>  $city,
             'government' => $government,
             'languages' => $languages,
-            'specials'=> $specials
+            'specials' => $specials
         ], 200);
-  
-
     }
     public function get_all_orders_for_user(Request $request)
     {
-        $orders=Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
+        $orders = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
         return Response::json(array(
             'status' => 200,
             'message' => 'true',
@@ -294,7 +301,7 @@ class SpecialistController extends Controller
         // جلب بيانات المختص بناءً على الـ ID الموجود في التوكن (المستخدم عبر الـ API)
         $specialist = Specialist::with(['city' => function ($q) {
             $q->select('id', 'name_' . app()->getLocale() . ' as name');
-        },'government' => function ($q) {
+        }, 'government' => function ($q) {
             $q->select('id', 'name_' . app()->getLocale() . ' as name');
         },])->where('id', Auth::guard('specialist-api')->user()->id)->get();
         $specialist->map(function ($specialist) {
@@ -335,5 +342,4 @@ class SpecialistController extends Controller
             'data' => $specialist,
         ));
     }
-    
 }

@@ -32,7 +32,7 @@ return new class extends Migration
             $table->foreign('special_id')->references('id')->on('specials')->onDelete('cascade');
             $table->foreign('specialist_id')->references('id')->on('specialists')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('coupoun_id')->references('id')->on('coupons')->onDelete('set null');
+            //  $table->foreign('coupoun_id')->references('id')->on('coupons')->onDelete('set null');
         });
     }
 
