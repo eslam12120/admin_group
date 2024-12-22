@@ -28,6 +28,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
     Route::get('search/specialist', [HomeController::class, 'search_specialist']);
     Route::get('sort/specialist', [HomeController::class, 'sort_by']);
     Route::get('filter/specialist', [HomeController::class, 'filter_by']);
+    Route::get('get/data/specialist/{id}', [HomeController::class,'getSpecialistData']);
 
     Route::group(['namespace' => 'Auths'], function () {
 
@@ -54,7 +55,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
 
         Route::post('specialist/register', [SpecialistController::class, 'register']);
         Route::post('specialist/login', [SpecialistController::class, 'login']);
-     
+
         Route::post('specialist/check/code', [SpecialistController::class, 'check_otp']);
         Route::get('specialist/getUserById/{id}', [AuthController::class, 'getUserById']);
         Route::post('specialist/data',  [SpecialistController::class, 'get_all_data']);
