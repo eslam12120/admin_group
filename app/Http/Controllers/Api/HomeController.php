@@ -7,11 +7,15 @@ use App\Models\Order;
 use App\Models\Coupoun;
 use App\Models\Service;
 use App\Models\Special;
+use App\Models\Experience;
 use App\Models\Specialist;
 use App\Models\UserCoupoun;
+use App\Models\Certificates;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Models\SkillSpecialist;
 use App\Models\SpecialistSpecial;
+use App\Models\LanguageSpecialist;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -292,5 +296,57 @@ class HomeController extends Controller
         return response()->json([
             'message' => 'success'
         ], 200);
+    }
+
+
+    public function getSpecialistData($id)
+    {
+        // جلب بيانات المختص بناءً على الـ ID الموجود في التوكن (المستخدم عبر الـ API)
+        $specialist = Specialist::where('id',$id)->with(['city' => function ($q) {
+            $q->select('id', 'name_' . app()->getLocale() . ' as name');
+        }, 'government' => function ($q) {
+            $q->select('id', 'name_' . app()->getLocale() . ' as name');
+        },])->where('id', Auth::guard('specialist-api')->user()->id)->get();
+        $specialist->map(function ($specialist) {
+
+            $specialist['specials'] = SpecialistSpecial::where('specialist_id', $specialist['id'])->select('id', 'specialist_id', 'special_id')->with(['specials' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            }])->get();
+        });
+        $specialist->map(function ($specialist) {
+
+            $specialist['languages'] = LanguageSpecialist::where('specialist_id', $specialist['id'])->select('id', 'specialist_id', 'language_id')->with(['languages' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            }])->get();
+        });
+        $specialist->map(function ($specialist) {
+
+            $specialist['certificates'] = Certificates::where('specialist_id', $specialist['id'])->get();
+        });
+        $specialist->map(function ($specialist) {
+
+            $specialist['skills'] = SkillSpecialist::where('specialist_id', $specialist['id'])->get();
+        });
+        $specialist->map(function ($specialist) {
+
+            $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
+        });
+        $specialist->map(function ($specialist) {
+
+            $specialist['image_url'] =asset('images/specialists/' . $specialist->image);
+        });
+
+        // التحقق من وجود المختص
+        // if ($specialist) {
+        //     // إضافة الرابط الكامل للصورة
+        //     $specialist->image = asset('images/specialists/' . $specialist->image);
+        // }
+
+        // إرجاع البيانات في الاستجابة
+        return Response::json(array(
+            'status' => 200,
+            'message' => 'true',
+            'data' => $specialist,
+        ));
     }
 }
