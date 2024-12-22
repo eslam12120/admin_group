@@ -11,6 +11,6 @@ class LanguageSpecialist extends Model
     protected $guarded = [];
     public function languages()
     {
-        return $this->belongsTo(language::class, 'language_id');
+        return $this->belongsTo(Language::class, 'language_id');
     }
 }
