@@ -141,7 +141,7 @@ class SpecialistController extends Controller
             return response()->json([
                 'message' => 'Specialist created successfully',
                 'data' => $specialist,
-            ], 201);
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
