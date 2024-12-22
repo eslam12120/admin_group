@@ -328,6 +328,10 @@ class SpecialistController extends Controller
 
             $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
         });
+        $specialist->map(function ($specialist) {
+
+            $specialist['image_url'] =asset('images/specialists/' . $specialist->image);
+        });
 
         // التحقق من وجود المختص
         // if ($specialist) {
