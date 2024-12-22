@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('specialists', function (Blueprint $table) {
-            $table->text('device_token')->nullable();
+            $table->bigInteger('specialist_id')->nullable();
         });
     }
 
