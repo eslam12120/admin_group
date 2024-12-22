@@ -19,6 +19,7 @@ use App\Models\LanguageSpecialist;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 class HomeController extends Controller
 {
@@ -130,34 +131,85 @@ class HomeController extends Controller
             'data' => $specialists,
         ], 200);
     }
-   public function sort_by(Request $request)
-{
-    $lang = $request->lang;
-    $sortColumn = 'price'; // Default sorting column
-    $sortOrder = 'asc';    // Default sorting order
+    public function sort_by(Request $request)
+    {
+        $lang = $request->lang;
+        $sortColumn = 'price'; // Default sorting column
+        $sortOrder = 'asc';    // Default sorting order
 
-    // Determine sorting criteria
-    if ($request->sort == 'min') {
-        $sortColumn = 'price';
-        $sortOrder = 'asc';
-    } elseif ($request->sort == 'max') {
-        $sortColumn = 'price';
-        $sortOrder = 'desc';
-    } elseif ($request->sort == 'rating') {
-        $sortColumn = 'rate';
-        $sortOrder = 'desc';
+        // Determine sorting criteria
+        if ($request->sort == 'min') {
+            $sortColumn = 'price';
+            $sortOrder = 'asc';
+        } elseif ($request->sort == 'max') {
+            $sortColumn = 'price';
+            $sortOrder = 'desc';
+        } elseif ($request->sort == 'rating') {
+            $sortColumn = 'rate';
+            $sortOrder = 'desc';
+        }
+
+        // Fetch and paginate specialists
+        $specialists = Specialist::where('status', '1')
+            ->with([
+                'city' => function ($q) use ($lang) {
+                    $q->select('id', 'name_' . $lang . ' as name');
+                }
+            ])
+            ->orderBy($sortColumn, $sortOrder)
+            ->paginate(30)
+            ->through(function ($specialist) use ($lang) {
+                $specialist->image_url = asset('specialist_images/' . $specialist->image);
+                $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
+                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')
+                    ->where('specialist_id', $specialist->id)
+                    ->get();
+                return $specialist;
+            });
+
+        return response()->json([
+            'message' => 'success',
+            'data' => $specialists,
+        ], 200);
     }
+    public function filter_by(Request $request)
+    {
+        $lang = $request->lang;
+        $query = Specialist::query()
+            ->where('status', '1')
+            ->with([
+                'city' => function ($q) use ($lang) {
+                    $q->select('id', 'name_' . $lang . ' as name');
+                }
+            ]);
 
-    // Fetch and paginate specialists
-    $specialists = Specialist::where('status', '1')
-        ->with([
-            'city' => function ($q) use ($lang) {
-                $q->select('id', 'name_' . $lang . ' as name');
-            }
-        ])
-        ->orderBy($sortColumn, $sortOrder)
-        ->paginate(30)
-        ->through(function ($specialist) use ($lang) {
+        // Apply filters if provided
+        if ($request->has('special_id')) {
+            $special = SpecialistSpecial::where('special_id', $request->special_id)->pluck('specialist_id');
+            $query->whereIn('id', $special);
+        }
+
+        if ($request->has('city_id')) {
+            $query->where('city_id', $request->city_id);
+        }
+
+        if ($request->has('gov_id')) {
+            $query->where('gov_id', $request->gov_id);
+        }
+
+        if ($request->has('rate')) {
+            $query->where('rate', $request->rate);
+        }
+
+        if ($request->has('min_price') && $request->has('max_price')) {
+            $query->whereBetween('price', [$request->min_price, $request->max_price]);
+        }
+
+        // Sort specialists by the desired criteria (default: rating)
+        $query->orderBy('rate', 'desc');
+
+        // Fetch and paginate specialists
+        $specialists = $query->paginate(30)->through(function ($specialist) use ($lang) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
             $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
             $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')
@@ -166,62 +218,11 @@ class HomeController extends Controller
             return $specialist;
         });
 
-    return response()->json([
-        'message' => 'success',
-        'data' => $specialists,
-    ], 200);
-}
-  public function filter_by(Request $request)
-{
-    $lang = $request->lang;
-    $query = Specialist::query()
-        ->where('status', '1')
-        ->with([
-            'city' => function ($q) use ($lang) {
-                $q->select('id', 'name_' . $lang . ' as name');
-            }
-        ]);
-
-    // Apply filters if provided
-    if ($request->has('special_id')) {
-        $special = SpecialistSpecial::where('special_id', $request->special_id)->pluck('specialist_id');
-        $query->whereIn('id', $special);
+        return response()->json([
+            'message' => 'success',
+            'data' => $specialists,
+        ], 200);
     }
-
-    if ($request->has('city_id')) {
-        $query->where('city_id', $request->city_id);
-    }
-
-    if ($request->has('gov_id')) {
-        $query->where('gov_id', $request->gov_id);
-    }
-
-    if ($request->has('rate')) {
-        $query->where('rate', $request->rate);
-    }
-
-    if ($request->has('min_price') && $request->has('max_price')) {
-        $query->whereBetween('price', [$request->min_price, $request->max_price]);
-    }
-
-    // Sort specialists by the desired criteria (default: rating)
-    $query->orderBy('rate', 'desc');
-
-    // Fetch and paginate specialists
-    $specialists = $query->paginate(30)->through(function ($specialist) use ($lang) {
-        $specialist->image_url = asset('specialist_images/' . $specialist->image);
-        $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-        $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')
-            ->where('specialist_id', $specialist->id)
-            ->get();
-        return $specialist;
-    });
-
-    return response()->json([
-        'message' => 'success',
-        'data' => $specialists,
-    ], 200);
-}
 
     public function add_order(Request $request)
     {
@@ -301,52 +302,52 @@ class HomeController extends Controller
 
     public function getSpecialistData($id)
     {
-        // جلب بيانات المختص بناءً على الـ ID الموجود في التوكن (المستخدم عبر الـ API)
-        $specialist = Specialist::where('id',$id)->with(['city' => function ($q) {
-            $q->select('id', 'name_' . app()->getLocale() . ' as name');
-        }, 'government' => function ($q) {
-            $q->select('id', 'name_' . app()->getLocale() . ' as name');
-        },])->where('id', Auth::guard('specialist-api')->user()->id)->get();
-        $specialist->map(function ($specialist) {
+        // Fetch specialist data based on ID, including city and government relations
+        $specialist = Specialist::where('id', $id)
+            ->with([
+                'city' => function ($q) {
+                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                },
+                'government' => function ($q) {
+                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                },
+            ])
+            ->first();
 
-            $specialist['specials'] = SpecialistSpecial::where('specialist_id', $specialist['id'])->select('id', 'specialist_id', 'special_id')->with(['specials' => function ($q) {
+        // Check if the specialist exists
+        if (!$specialist) {
+            return Response::json([
+                'status' => 404,
+                'message' => 'Specialist not found',
+                'data' => null,
+            ]);
+        }
+
+        // Add additional data to the specialist
+        $specialist['specials'] = SpecialistSpecial::where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'special_id')
+            ->with(['specials' => function ($q) {
                 $q->select('id', 'name_' . app()->getLocale() . ' as name');
-            }])->get();
-        });
-        $specialist->map(function ($specialist) {
+            }])
+            ->get();
 
-            $specialist['languages'] = LanguageSpecialist::where('specialist_id', $specialist['id'])->select('id', 'specialist_id', 'language_id')->with(['languages' => function ($q) {
+        $specialist['languages'] = LanguageSpecialist::where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'language_id')
+            ->with(['languages' => function ($q) {
                 $q->select('id', 'name_' . app()->getLocale() . ' as name');
-            }])->get();
-        });
-        $specialist->map(function ($specialist) {
+            }])
+            ->get();
 
-            $specialist['certificates'] = Certificates::where('specialist_id', $specialist['id'])->get();
-        });
-        $specialist->map(function ($specialist) {
+        $specialist['certificates'] = Certificates::where('specialist_id', $specialist['id'])->get();
+        $specialist['skills'] = SkillSpecialist::where('specialist_id', $specialist['id'])->get();
+        $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
+        $specialist['image_url'] = asset('images/specialists/' . $specialist->image);
 
-            $specialist['skills'] = SkillSpecialist::where('specialist_id', $specialist['id'])->get();
-        });
-        $specialist->map(function ($specialist) {
-
-            $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
-        });
-        $specialist->map(function ($specialist) {
-
-            $specialist['image_url'] =asset('images/specialists/' . $specialist->image);
-        });
-
-        // التحقق من وجود المختص
-        // if ($specialist) {
-        //     // إضافة الرابط الكامل للصورة
-        //     $specialist->image = asset('images/specialists/' . $specialist->image);
-        // }
-
-        // إرجاع البيانات في الاستجابة
-        return Response::json(array(
+        // Return the specialist data
+        return Response::json([
             'status' => 200,
             'message' => 'true',
             'data' => $specialist,
-        ));
+        ]);
     }
 }
