@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('order_services', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('service_special_id')->nullable();
             $table->string('status')->default('pending')->nullable();
             $table->string('type_payment')->nullable();
