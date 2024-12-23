@@ -404,10 +404,10 @@ class HomeController extends Controller
             ]);
         }
         if ($request->specialist_id && is_array($request->specialist_id)) {
-            foreach ($request->specialist_id as $order->id => $specialistId) {
-                OrderNormalSpecialist::where('id', $order->id)->update([
+            foreach ($request->specialist_id as $specialistId) {
+                OrderNormalSpecialist::create([
                     'specialist_id' => $specialistId,
-                    'order_id'=>$order->id,
+                    'order_id' => $order->id, // Ensure $order->id is valid
                 ]);
             }
         }
