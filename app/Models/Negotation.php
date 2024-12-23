@@ -9,6 +9,7 @@ class Negotation extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    
     public function specialist()
     {
         return $this->belongsTo(Specialist::class);

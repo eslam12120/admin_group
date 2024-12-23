@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api\Specialists;
 
 use App\Http\Controllers\Controller;
+use App\Models\Negotation;
 use App\Models\OrderFile;
 use App\Models\OrderService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Validator;
 
 class HomeSpecialistController extends Controller
 {
@@ -48,6 +51,41 @@ class HomeSpecialistController extends Controller
         ));
 
 
+    }
+    public function add_negotation(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'order_id' => 'nullable|integer',
+            'user_id' => 'nullable|integer',
+            'specialist_id' => 'nullable|integer',
+            'time' => 'nullable',
+            'price' => 'nullable',
+            'status' => 'nullable|string|max:255',
+        ], [
+            'order_id.required' => trans('auth.email.register'),
+           
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->first()], 422);
+        }
+
+
+        // Create the order using the validated data
+        Negotation::create([
+            'order_id' => $request->order_id,
+            'user_id' => $request->user_id,
+            'specialist_id' => Auth::guard('specialist-api')->user()->id,
+            'time' => $request->time,
+            'price' => $request->price,
+            'status' => $request->status,
+        ]);
+
+        return Response::json(array(
+            'status' => 200,
+            'message' => 'created successfully',
+          
+        ));
     }
 
 }
