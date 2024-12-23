@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('order_files', function (Blueprint $table) {
             $table->id();
-            $table->text('audio_path')->nullable(); // File path for audio
+            $table->text('file_path')->nullable(); // File path for audio
             $table->unsignedBigInteger('order_id')->nullable();
             $table->timestamps();
         });
