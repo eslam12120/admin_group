@@ -440,11 +440,13 @@ class HomeController extends Controller
 
     public function services_specials()
     {
-        $services = ServiceSpecial::where('active', '1')->select('id', 'name_' . app()->getLocale() . ' as name', 'description_' . app()->getLocale() . ' as description')->orderBy('id', 'DESC')->simplePaginate(30);
+        
+        $services = ServiceSpecial::where('active', '1')->select('id', 'name_' . app()->getLocale() . ' as name', 'description_' . app()->getLocale() . ' as description','price','image')->orderBy('id', 'DESC')->simplePaginate(30);
         return response()->json([
             'data' => $services,
             'message' => 'success'
         ], 200);
+
     }
 
     public function add_order_service(Request $request)
