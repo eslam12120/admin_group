@@ -335,7 +335,7 @@ class HomeController extends Controller
             }])
             ->get();
 
-            $specialist['rates'] = Rate::with('user') // Load the related user for each rate
+        $specialist['rates'] = Rate::with('user') // Load the related user for each rate
             ->where('specialist_id', $specialist['id'])
             ->select('id', 'specialist_id', 'rate', 'description')
             ->get()
@@ -359,13 +359,13 @@ class HomeController extends Controller
         $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
         $specialist['image_url'] = asset('images/specialists/' . $specialist->image);
 
-        $orders=Order::where('id', $id)->where('status','finished')->count();
+        $orders = Order::where('id', $id)->where('status', 'finished')->count();
         // Return the specialist data
         return Response::json([
             'status' => 200,
             'message' => 'true',
             'data' => $specialist,
-            'orders_count'=>$orders,
+            'orders_count' => $orders,
         ]);
     }
 
@@ -440,7 +440,7 @@ class HomeController extends Controller
 
     public function services_specials()
     {
-        $services = ServiceSpecial::orderBy('id', 'DESC')->simplePaginate(30);
+        $services = ServiceSpecial::where('active', '1')->select('id', 'name_' . app()->getLocale() . ' as name', 'description_' . app()->getLocale() . ' as description')->orderBy('id', 'DESC')->simplePaginate(30);
         return response()->json([
             'data' => $services,
             'message' => 'success'
@@ -485,6 +485,4 @@ class HomeController extends Controller
             'data' => $order->id,
         ], 200);
     }
-
-
 }
