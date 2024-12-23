@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\Coupoun;
 use App\Models\Service;
 use App\Models\Special;
+use App\Models\OrderFile;
 use App\Models\Experience;
 use App\Models\Specialist;
 use App\Models\OrderNormal;
@@ -440,7 +441,7 @@ class HomeController extends Controller
 
     public function services_specials()
     {
-        
+
         $services = ServiceSpecial::where('active', '1')->select('id', 'name_' . app()->getLocale() . ' as name', 'description_' . app()->getLocale() . ' as description','price','image')->orderBy('id', 'DESC')->simplePaginate(30);
         return response()->json([
             'data' => $services,
@@ -456,9 +457,12 @@ class HomeController extends Controller
             $audioPath = $request->file('audio')->store('uploads/audio', 'public');
         }
         // Handle general file upload
-        $filePath = null;
-        if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('uploads/files', 'public');
+        $filePaths = [];
+        if ($request->hasFile('file') && is_array($request->file)) {
+            foreach ($request->file('file') as $file) {
+                // Store each file and save its path
+                $filePaths[] = $file->store('uploads/files', 'public');
+            }
         }
         $order = OrderService::create([
             'status' => 'pending',
@@ -474,13 +478,21 @@ class HomeController extends Controller
             'coupoun_id' => $request->coupoun_id,
             'service_special_id' => $request->service_special_id,
             'audio_path' => $audioPath, // Save audio path
-            'file_path' => $filePath, // Save file path
+         //   'file_path' => $filePath, // Save file path
         ]);
         if ($request->coupoun_id) {
             UserCoupoun::create([
                 'user_id' => Auth::id(),
                 'coupoun_id' => $request->coupoun_id,
             ]);
+        }
+        if ($filePaths) {
+            foreach ($filePaths as $filePath) {
+                OrderFile::create([
+                    'order_id' => $order->id,  // The order the file is related to
+                    'file_path' => $filePath,   // The file path
+                ]);
+            }
         }
         return response()->json([
             'message' => 'success',
