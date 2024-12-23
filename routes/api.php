@@ -61,6 +61,14 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         // Route for adding a service order
         Route::post('/orders/service', [HomeController::class, 'add_order_service'])->name('orders.service.add');
 
+        Route::get('/specialist-offers', [HomeController::class, 'specialist_offers']);
+
+        // Approve the offer
+        Route::post('/approve-offer', [HomeController::class, 'approve_offers']);
+
+        // Reject the offer
+        Route::post('/reject-offer', [HomeController::class, 'reject_offers']);
+
     });
     Route::group(['namespace' => 'auth-specialist'], function () {
 

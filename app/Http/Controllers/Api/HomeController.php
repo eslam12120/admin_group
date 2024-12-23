@@ -22,6 +22,7 @@ use App\Models\SpecialistSpecial;
 use App\Models\LanguageSpecialist;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Negotation;
 use Illuminate\Support\Facades\Auth;
 use App\Models\OrderNormalSpecialist;
 use Illuminate\Support\Facades\Response;
@@ -497,6 +498,35 @@ class HomeController extends Controller
         return response()->json([
             'message' => 'success',
             'data' => $order->id,
+        ], 200);
+    }
+    public function specialist_offers()
+    {
+        $services = Negotation::with('specialist')->where('user_id', Auth::id())->where('status','pending')->orderBy('id', 'DESC')->simplePaginate(30);
+        return response()->json([
+            'data' => $services,
+            'message' => 'success'
+        ], 200);
+    }
+    public function approve_offers(Request $request)
+    {
+        Negotation::where('id', $request->id)->update([
+            'status'=>'approved',
+            ]);
+            OrderService::where('id', $request->order_id)->update([
+                'status'=>'approved',
+                ]);
+        return response()->json([
+            'message' => 'success'
+        ], 200);
+    }
+    public function reject_offers(Request $request)
+    {
+        Negotation::where('id', $request->id)->update([
+            'status'=>'rejected',
+            ]);
+        return response()->json([
+            'message' => 'success'
         ], 200);
     }
 }
