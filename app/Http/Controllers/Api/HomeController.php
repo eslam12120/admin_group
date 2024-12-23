@@ -443,12 +443,11 @@ class HomeController extends Controller
     public function services_specials()
     {
 
-        $services = ServiceSpecial::where('active', '1')->select('id', 'name_' . app()->getLocale() . ' as name', 'description_' . app()->getLocale() . ' as description','price','image')->orderBy('id', 'DESC')->simplePaginate(30);
+        $services = ServiceSpecial::where('active', '1')->select('id', 'name_' . app()->getLocale() . ' as name', 'description_' . app()->getLocale() . ' as description', 'price', 'image')->orderBy('id', 'DESC')->simplePaginate(30);
         return response()->json([
             'data' => $services,
             'message' => 'success'
         ], 200);
-
     }
 
     public function add_order_service(Request $request)
@@ -479,7 +478,7 @@ class HomeController extends Controller
             'coupoun_id' => $request->coupoun_id,
             'service_special_id' => $request->service_special_id,
             'audio_path' => $audioPath, // Save audio path
-         //   'file_path' => $filePath, // Save file path
+            //   'file_path' => $filePath, // Save file path
         ]);
         if ($request->coupoun_id) {
             UserCoupoun::create([
@@ -502,7 +501,13 @@ class HomeController extends Controller
     }
     public function specialist_offers()
     {
-        $services = Negotation::with('specialist')->where('user_id', Auth::id())->where('status','pending')->orderBy('id', 'DESC')->simplePaginate(30);
+        $services = Negotation::with('specialist')->where('user_id', Auth::id())->where('status', 'pending')->orderBy('id', 'DESC')->simplePaginate(30);
+        $services->getCollection()->transform(function ($item) {
+            if ($item->specialist) {
+                $item->specialist->image_url = asset('images/specialists/' . $item->specialist->image);
+            }
+            return $item;
+        });
         return response()->json([
             'data' => $services,
             'message' => 'success'
@@ -511,11 +516,11 @@ class HomeController extends Controller
     public function approve_offers(Request $request)
     {
         Negotation::where('id', $request->id)->update([
-            'status'=>'approved',
-            ]);
-            OrderService::where('id', $request->order_id)->update([
-                'status'=>'approved',
-                ]);
+            'status' => 'approved',
+        ]);
+        OrderService::where('id', $request->order_id)->update([
+            'status' => 'approved',
+        ]);
         return response()->json([
             'message' => 'success'
         ], 200);
@@ -523,8 +528,8 @@ class HomeController extends Controller
     public function reject_offers(Request $request)
     {
         Negotation::where('id', $request->id)->update([
-            'status'=>'rejected',
-            ]);
+            'status' => 'rejected',
+        ]);
         return response()->json([
             'message' => 'success'
         ], 200);
