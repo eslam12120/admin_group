@@ -9,16 +9,20 @@ use App\Models\Service;
 use App\Models\Special;
 use App\Models\Experience;
 use App\Models\Specialist;
+use App\Models\OrderNormal;
 use App\Models\UserCoupoun;
 use App\Models\Certificates;
 use App\Models\Notification;
+use App\Models\OrderService;
 use Illuminate\Http\Request;
+use App\Models\ServiceSpecial;
 use App\Models\SkillSpecialist;
 use App\Models\SpecialistSpecial;
 use App\Models\LanguageSpecialist;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Models\OrderNormalSpecialist;
 use Illuminate\Support\Facades\Response;
 
 class HomeController extends Controller
@@ -231,7 +235,7 @@ class HomeController extends Controller
             'specialist_id' => $request->specialist_id,
             'status' => 'pending',
             'type_payment' => $request->type_payment,
-            'type_com' => $request->type_payment,
+            'type_com' => $request->type_com,
             'desc' => $request->desc,
             'address' => $request->address,
             'price' => $request->price,
@@ -331,6 +335,18 @@ class HomeController extends Controller
             }])
             ->get();
 
+            $specialist['rates'] = Rate::with('user') // Load the related user for each rate
+            ->where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'rate', 'description')
+            ->get()
+            ->map(function ($rate) {
+                // Add the user's image URL to the rate
+                if ($rate->user) {
+                    $rate->user['image_url'] = asset('images/users/' . $rate->user->image);
+                }
+                return $rate;
+            });
+
         $specialist['languages'] = LanguageSpecialist::where('specialist_id', $specialist['id'])
             ->select('id', 'specialist_id', 'language_id')
             ->with(['languages' => function ($q) {
@@ -343,11 +359,132 @@ class HomeController extends Controller
         $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
         $specialist['image_url'] = asset('images/specialists/' . $specialist->image);
 
+        $orders=Order::where('id', $id)->where('status','finished')->count();
         // Return the specialist data
         return Response::json([
             'status' => 200,
             'message' => 'true',
             'data' => $specialist,
+            'orders_count'=>$orders,
         ]);
     }
+
+
+    public function add_order_normal(Request $request)
+    {
+        $audioPath = null;
+        if ($request->hasFile('audio')) {
+            $audioPath = $request->file('audio')->store('uploads/audio', 'public');
+        }
+        // Handle general file upload
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('uploads/files', 'public');
+        }
+        $order = OrderNormal::create([
+            'special_id' => $request->special_id,
+            'status' => 'pending',
+            'type_payment' => $request->type_payment,
+            'desc' => $request->desc,
+            'address' => $request->address,
+            'price' => $request->price,
+            'paid_now' => $request->paid_now,
+            'have_discount' => $request->have_discount,
+            'code' => $request->code,
+            'value_of_discount' => $request->value_of_discount,
+            'user_id' => Auth::id(),
+            'coupoun_id' => $request->coupoun_id,
+            'audio_path' => $audioPath, // Save audio path
+            'file_path' => $filePath, // Save file path
+        ]);
+        if ($request->coupoun_id) {
+            UserCoupoun::create([
+                'user_id' => Auth::id(),
+                'coupoun_id' => $request->coupoun_id,
+            ]);
+        }
+        if ($request->specialist_id && is_array($request->specialist_id)) {
+            foreach ($request->specialist_id as $order->id => $specialistId) {
+                OrderNormalSpecialist::where('id', $order->id)->update([
+                    'specialist_id' => $specialistId,
+                    'order_id'=>$order->id,
+                ]);
+            }
+        }
+        return response()->json([
+            'message' => 'success',
+            'data' => $order->id,
+        ], 200);
+    }
+
+
+
+    public function specialistNotifications()
+    {
+        $notifications = Notification::where('specialist_id', Auth::id())->orderBy('id', 'DESC')->simplePaginate(30);
+        return response()->json([
+            'data' => $notifications,
+            'message' => 'success'
+        ], 200);
+    }
+
+    public function specialistread_notifications()
+    {
+        Notification::where('specialist_id', Auth::id())->orderBy('id', 'DESC')->update([
+            'is_read' => '1'
+        ]);
+        return response()->json([
+            'message' => 'success'
+        ], 200);
+    }
+
+    public function services_specials()
+    {
+        $services = ServiceSpecial::orderBy('id', 'DESC')->simplePaginate(30);
+        return response()->json([
+            'data' => $services,
+            'message' => 'success'
+        ], 200);
+    }
+
+    public function add_order_service(Request $request)
+    {
+        $audioPath = null;
+        if ($request->hasFile('audio')) {
+            $audioPath = $request->file('audio')->store('uploads/audio', 'public');
+        }
+        // Handle general file upload
+        $filePath = null;
+        if ($request->hasFile('file')) {
+            $filePath = $request->file('file')->store('uploads/files', 'public');
+        }
+        $order = OrderService::create([
+            'status' => 'pending',
+            'type_payment' => $request->type_payment,
+            'desc' => $request->desc,
+            'address' => $request->address,
+            'price' => $request->price,
+            'paid_now' => $request->paid_now,
+            'have_discount' => $request->have_discount,
+            'code' => $request->code,
+            'value_of_discount' => $request->value_of_discount,
+            'user_id' => Auth::id(),
+            'coupoun_id' => $request->coupoun_id,
+            'service_special_id' => $request->service_special_id,
+            'audio_path' => $audioPath, // Save audio path
+            'file_path' => $filePath, // Save file path
+        ]);
+        if ($request->coupoun_id) {
+            UserCoupoun::create([
+                'user_id' => Auth::id(),
+                'coupoun_id' => $request->coupoun_id,
+            ]);
+        }
+        return response()->json([
+            'message' => 'success',
+            'data' => $order->id,
+        ], 200);
+    }
+
+
 }

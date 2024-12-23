@@ -27,7 +27,7 @@ class Specialist extends Authenticatable implements JWTSubject
     }
     public function government()
     {
-        return $this->belongsTo(government::class, 'gov_id');
+        return $this->belongsTo(Government::class, 'gov_id');
     }
     public function getJWTIdentifier()
     {
