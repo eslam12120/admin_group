@@ -76,6 +76,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         // Route::post('user/logout', [AuthController::class, 'logout']);
         Route::get('specialist/getSpecialistData', [SpecialistController::class, 'getSpecialistData']);
         Route::get('specialist/services/orders', [HomeSpecialistController::class, 'getData']);
+        Route::post('specialist/services/orders/by/id', [HomeSpecialistController::class, 'get_data_by_id']);
         // Route::post('user/edit', [EditProfileController::class, 'Editprofile']);
         // Route::post('user/change_password', [EditProfileController::class, 'change_password'])->middleware('checkUser:user-api');
         // Route::post('user/rate', [HomeController::class, 'add_rate']);
