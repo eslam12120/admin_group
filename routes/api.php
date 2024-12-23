@@ -29,6 +29,9 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
     Route::get('sort/specialist', [HomeController::class, 'sort_by']);
     Route::get('filter/specialist', [HomeController::class, 'filter_by']);
     Route::get('get/data/specialist/{id}', [HomeController::class,'getSpecialistData']);
+    Route::get('services/specials', [HomeController::class,'services_specials']);
+
+
 
     Route::group(['namespace' => 'Auths'], function () {
 
@@ -50,6 +53,12 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('read_notifications', [HomeController::class, 'read_notifications'])->name('read_notifications');
         Route::post('add_order', [HomeController::class, 'add_order'])->name('add_order');
         Route::post('add_coupoun', [HomeController::class, 'add_coupoun'])->name('add_coupoun');
+
+        Route::post('/orders/normal', [HomeController::class, 'add_order_normal'])->name('orders.normal.add');
+
+        // Route for adding a service order
+        Route::post('/orders/service', [HomeController::class, 'add_order_service'])->name('orders.service.add');
+
     });
     Route::group(['namespace' => 'auth-specialist'], function () {
 
@@ -72,6 +81,9 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         // Route::post('add_order', [HomeController::class, 'add_order'])->name('add_order');
         // Route::post('add_coupoun', [HomeController::class, 'add_coupoun'])->name('add_coupoun');
         Route::get('specialist/orders', [SpecialistController::class, 'get_all_orders_for_user']);
+        Route::get('specialist_notifications', [HomeController::class, 'specialistNotifications'])->name('userNotifications');
+        Route::get('specialist_read_notifications', [HomeController::class, 'specialistread_notifications'])->name('read_notifications');
+
     });
 
 });
