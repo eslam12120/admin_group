@@ -3,11 +3,13 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\Specialists\HomeSpecialistController;
 use App\Http\Controllers\Api\Specialists\SpecialistController;
 use App\Http\Controllers\Api\Users\AuthController;
 use App\Http\Controllers\Api\Users\EditProfileController;
 use App\Http\Controllers\Api\Users\ResetPasswordController;
 use App\Http\Controllers\Api\Users\ForgotPasswordController;
+
 use App\Models\Specialist;
 
 /*
@@ -73,6 +75,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
     Route::group(['middleware' => 'checkUser:specialist-api'], function () {
         // Route::post('user/logout', [AuthController::class, 'logout']);
         Route::get('specialist/getSpecialistData', [SpecialistController::class, 'getSpecialistData']);
+        Route::get('specialist/services/orders', [HomeSpecialistController::class, 'getData']);
         // Route::post('user/edit', [EditProfileController::class, 'Editprofile']);
         // Route::post('user/change_password', [EditProfileController::class, 'change_password'])->middleware('checkUser:user-api');
         // Route::post('user/rate', [HomeController::class, 'add_rate']);
