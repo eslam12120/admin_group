@@ -12,7 +12,7 @@ class HomeSpecialistController extends Controller
     //
     public function getdata()
     {
-        $data=OrderService::where('status','pendding')->with(
+        $data=OrderService::where('status','pending')->with(
             [
                 'service_special' => function ($q) {
                     $q->select('id', 'name_' . app()->getLocale() . ' as name');
