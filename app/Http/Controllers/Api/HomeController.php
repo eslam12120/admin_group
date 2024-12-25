@@ -518,8 +518,10 @@ class HomeController extends Controller
         Negotation::where('id', $request->id)->update([
             'status' => 'approved',
         ]);
+        $specialist= Negotation::where('id', $request->id)->first();
         OrderService::where('id', $request->order_id)->update([
             'status' => 'approved',
+            'specialist_id'=>$specialist->specialist_id ?? null
         ]);
         return response()->json([
             'message' => 'success'
