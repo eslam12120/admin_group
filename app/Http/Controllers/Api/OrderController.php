@@ -34,10 +34,21 @@ class OrderController extends Controller
                 ->where('status', 'pending')
                 ->paginate(30);
         } else {
-            $orders = OrderNormal::where('user_id', Auth::id())->with(['ordernormal.specialist'])
+            $orders = OrderNormal::with(['ordernormal.specialist'])->where('user_id', Auth::id())
                 ->where('status', 'finished')
                 ->paginate(30);
         }
+
+        // Map the image URLs for each specialist
+        $orders->getCollection()->transform(function ($order) {
+            foreach ($order->ordernormal as $ordernormal) {
+                if ($ordernormal->specialist) {
+                    $ordernormal->specialist->image_url =  asset('specialist_images/' . $ordernormal->specialist->image);
+                }
+            }
+            return $order;
+        });
+
         return response()->json([
             'message' => 'success',
             'data' => $orders,
