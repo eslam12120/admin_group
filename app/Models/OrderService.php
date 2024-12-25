@@ -13,5 +13,8 @@ class OrderService extends Model
     {
         return $this->belongsTo(ServiceSpecial::class); // Assuming the foreign key is user_id in orders table
     }
-
+    public function specialist()
+    {
+        return $this->belongsTo(Specialist::class); // Assuming the foreign key is user_id in orders table
+    }
 }
