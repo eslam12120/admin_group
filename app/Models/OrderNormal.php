@@ -15,6 +15,6 @@ class OrderNormal extends Model
     }
     public function ordernormal()
     {
-        return $this->belongsTo(OrderNormal::class); // Assuming the foreign key is user_id in orders table
+        return $this->belongsTo(OrderNormalSpecialist::class); // Assuming the foreign key is user_id in orders table
     }
 }
