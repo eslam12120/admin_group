@@ -1,16 +1,17 @@
 <?php
 
+use App\Models\Specialist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HomeController;
-use App\Http\Controllers\Api\Specialists\HomeSpecialistController;
-use App\Http\Controllers\Api\Specialists\SpecialistController;
+use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\Users\AuthController;
 use App\Http\Controllers\Api\Users\EditProfileController;
 use App\Http\Controllers\Api\Users\ResetPasswordController;
 use App\Http\Controllers\Api\Users\ForgotPasswordController;
 
-use App\Models\Specialist;
+use App\Http\Controllers\Api\Specialists\SpecialistController;
+use App\Http\Controllers\Api\Specialists\HomeSpecialistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,6 +47,12 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
     });
 
     Route::group(['middleware' => 'checkUser:user-api'], function () {
+
+
+        Route::get('get/orders', [OrderController::class, 'orders']);
+        Route::get('get/normal-orders', [OrderController::class, 'normal_orders']);
+        Route::get('get/order-services', [OrderController::class, 'orderservices']);
+
         Route::post('user/logout', [AuthController::class, 'logout']);
         Route::get('user/getUserData', [AuthController::class, 'getUserData']);
         Route::post('user/edit', [EditProfileController::class, 'Editprofile']);
