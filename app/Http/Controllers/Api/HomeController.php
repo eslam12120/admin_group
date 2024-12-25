@@ -339,7 +339,7 @@ class HomeController extends Controller
 
         $specialist['rates'] = Rate::with('user') // Load the related user for each rate
             ->where('specialist_id', $specialist['id'])
-            ->select('id', 'specialist_id', 'rate', 'description')
+            ->select('id', 'specialist_id', 'rate', 'description','user_id')
             ->get()
             ->map(function ($rate) {
                 // Add the user's image URL to the rate
