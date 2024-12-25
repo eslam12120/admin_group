@@ -339,7 +339,7 @@ class HomeController extends Controller
 
         $specialist['rates'] = Rate::with('user') // Load the related user for each rate
             ->where('specialist_id', $specialist['id'])
-            ->select('id', 'specialist_id', 'rate', 'description','user_id')
+            ->select('id', 'specialist_id', 'rate', 'description', 'user_id')
             ->get()
             ->map(function ($rate) {
                 // Add the user's image URL to the rate
@@ -379,9 +379,12 @@ class HomeController extends Controller
             $audioPath = $request->file('audio')->store('uploads/audio', 'public');
         }
         // Handle general file upload
-        $filePath = null;
-        if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('uploads/files', 'public');
+        $filePaths = [];
+        if ($request->hasFile('file') && is_array($request->file)) {
+            foreach ($request->file('file') as $file) {
+                // Store each file and save its path
+                $filePaths[] = $file->store('uploads/files', 'public');
+            }
         }
         $order = OrderNormal::create([
             'special_id' => $request->special_id,
@@ -410,6 +413,15 @@ class HomeController extends Controller
                 OrderNormalSpecialist::create([
                     'specialist_id' => $specialistId,
                     'order_id' => $order->id, // Ensure $order->id is valid
+                ]);
+            }
+        }
+        if ($filePaths) {
+            foreach ($filePaths as $filePath) {
+                OrderFile::create([
+                    'order_id' => $order->id,  // The order the file is related to
+                    'file_path' => $filePath,   // The file path
+                    'type' => 'normal'
                 ]);
             }
         }
@@ -491,6 +503,7 @@ class HomeController extends Controller
                 OrderFile::create([
                     'order_id' => $order->id,  // The order the file is related to
                     'file_path' => $filePath,   // The file path
+                    'type' => 'services'
                 ]);
             }
         }
@@ -518,10 +531,10 @@ class HomeController extends Controller
         Negotation::where('id', $request->id)->update([
             'status' => 'approved',
         ]);
-        $specialist= Negotation::where('id', $request->id)->first();
+        $specialist = Negotation::where('id', $request->id)->first();
         OrderService::where('id', $request->order_id)->update([
             'status' => 'approved',
-            'specialist_id'=>$specialist->specialist_id ?? null
+            'specialist_id' => $specialist->specialist_id ?? null
         ]);
         return response()->json([
             'message' => 'success'

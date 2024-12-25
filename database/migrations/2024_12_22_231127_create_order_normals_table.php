@@ -26,7 +26,6 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('coupoun_id')->nullable();
             $table->string('audio_path')->nullable(); // File path for audio
-            $table->string('file_path')->nullable(); // File path
             $table->timestamps();
         });
     }
