@@ -30,11 +30,11 @@ class OrderController extends Controller
     public function normal_orders(Request $request)
     {
         if ($request->status == 'pending') {
-            $orders = OrderNormal::with(['ordernormal.specialist'])->where('user_id', Auth::id())
+            $orders = OrderNormal::with(['ordernormal.specialist', 'orderfiles'])->where('user_id', Auth::id())
                 ->where('status', 'pending')
                 ->paginate(30);
         } else {
-            $orders = OrderNormal::with(['ordernormal.specialist'])->where('user_id', Auth::id())
+            $orders = OrderNormal::with(['ordernormal.specialist', 'orderfiles'])->where('user_id', Auth::id())
                 ->where('status', 'finished')
                 ->paginate(30);
         }
@@ -57,13 +57,13 @@ class OrderController extends Controller
     public function  orderservices(Request $request)
     {
         if ($request->status == 'finished') {
-            $orders = OrderService::where('user_id', Auth::id())->with('specialist')->where('status', 'finished')->paginate(30);
+            $orders = OrderService::where('user_id', Auth::id())->with(['specialist', 'orderfiles'])->where('status', 'finished')->paginate(30);
         }
         if ($request->status == 'pending') {
-            $orders = OrderService::where('user_id', Auth::id())->with('specialist')->where('status', 'pending')->paginate(30);
+            $orders = OrderService::where('user_id', Auth::id())->with(['specialist', 'orderfiles'])->where('status', 'pending')->paginate(30);
         }
         if ($request->status == 'cancelled') {
-            $orders = OrderService::where('user_id', Auth::id())->with('specialist')->where('status', 'cancelled')->paginate(30);
+            $orders = OrderService::where('user_id', Auth::id())->with(['specialist', 'orderfiles'])->where('status', 'cancelled')->paginate(30);
         }
         return response()->json([
             'message' => 'success',

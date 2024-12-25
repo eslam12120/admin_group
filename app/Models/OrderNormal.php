@@ -17,4 +17,9 @@ class OrderNormal extends Model
     {
         return $this->hasMany(OrderNormalSpecialist::class, 'order_id'); // Assuming the foreign key is user_id in orders table
     }
+    public function orderfiles()
+    {
+        return $this->hasMany(OrderFile::class, 'order_id')
+            ->where('type', 'normal'); // Filtering by type 'services' // Assuming the foreign key is user_id in orders table
+    }
 }

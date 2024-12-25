@@ -11,6 +11,6 @@ class OrderNormalSpecialist extends Model
     protected $guarded = [];
     public function specialist()
     {
-        return $this->belongsTo(Specialist::class); // Assuming the foreign key is user_id in orders table
+        return $this->hasMany(Specialist::class, 'specialist_id'); // Assuming the foreign key is user_id in orders table
     }
 }
