@@ -29,6 +29,10 @@ class Specialist extends Authenticatable implements JWTSubject
     {
         return $this->belongsTo(Government::class, 'gov_id');
     }
+    public function orderNormalSpecialists()
+{
+    return $this->hasMany(OrderNormalSpecialist::class, 'specialist_id');
+}
     public function getJWTIdentifier()
     {
         return $this->getKey();
