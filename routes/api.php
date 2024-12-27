@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Users\ForgotPasswordController;
 
 use App\Http\Controllers\Api\Specialists\SpecialistController;
 use App\Http\Controllers\Api\Specialists\HomeSpecialistController;
+use App\Http\Controllers\Api\Specialists\OrdersSpecialistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,7 +103,22 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('specialist/orders', [SpecialistController::class, 'get_all_orders_for_user']);
         Route::get('specialist_notifications', [HomeController::class, 'specialistNotifications'])->name('userNotifications');
         Route::get('specialist_read_notifications', [HomeController::class, 'specialistread_notifications'])->name('read_notifications');
-
+        Route::post('specialist/orders/schadule', [OrdersSpecialistController::class, 'order_schadule']);
+        Route::post('specialist/orders/finished', [OrdersSpecialistController::class, 'order_finished']);
+        Route::post('specialist/orders/cancelled', [OrdersSpecialistController::class, 'order_cancelled']);
+        Route::post('specialist/normal/orders/finished', [OrdersSpecialistController::class, 'normal_order_finished']);
+        Route::post('specialist/normal/orders/cancelled', [OrdersSpecialistController::class, 'normal_order_cancelled']);
+        Route::post('specialist/service/orders/finished', [OrdersSpecialistController::class, 'service_order_finished']);
+        Route::post('specialist/service/orders/cancelled', [OrdersSpecialistController::class, 'service_order_cancelled']);
+        Route::post('specialist/activate/account', [SpecialistController::class, 'activate_account']);
+        Route::post('specialist/unactivate/account', [SpecialistController::class,'unactivate_account']);
+        Route::get('specialist/get/all/finished/orders', [HomeSpecialistController::class, 'get_all_finished_orders']);
+        Route::get('specialist/get/all/schadule/orders', [HomeSpecialistController::class, 'get_all_schadule_orders']);
+        Route::get('specialist/get/all/cancelled/orders', [HomeSpecialistController::class, 'get_all_cancelled_orders']);
+        Route::get('specialist/get/all/finished/service/orders', [HomeSpecialistController::class, 'get_all_finished_service_orders']);
+        Route::get('specialist/get/all/cancelled/service/orders', [HomeSpecialistController::class, 'get_all_cancelled_service_orders']);
+        Route::get('specialist/get/all/finished/normal/orders', [HomeSpecialistController::class, 'get_all_finished_normal_orders']);
+        Route::get('specialist/get/all/cancelled/normal/orders', [HomeSpecialistController::class, 'get_all_cancelled_normal_orders']);
     });
 
 });
