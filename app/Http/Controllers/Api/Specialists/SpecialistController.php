@@ -10,6 +10,8 @@ use App\Models\Government;
 use App\Models\Language;
 use App\Models\LanguageSpecialist;
 use App\Models\Order;
+use App\Models\OrderNormal;
+use App\Models\OrderNormalSpecialist;
 use App\Models\SkillSpecialist;
 use App\Models\Special;
 use App\Models\Specialist;
@@ -290,10 +292,14 @@ class SpecialistController extends Controller
     public function get_all_orders_for_user(Request $request)
     {
         $orders = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
+        $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
+        $normal_order = OrderNormal::with(['user', 'coupon'])->whereIn('id', $data->pluck('order_id'))->get();
         return Response::json(array(
             'status' => 200,
             'message' => 'true',
             'data' => $orders,
+            'normal_orders'=>$normal_order,
+            
         ));
     }
     public function getSpecialistData()
@@ -344,6 +350,31 @@ class SpecialistController extends Controller
             'status' => 200,
             'message' => 'true',
             'data' => $specialist,
+        ));
+    }
+    public function activate_account(Request $request)
+    {
+
+         Specialist::where('id', Auth::guard('specialist-api')->user()->id)->update([
+            'is_active'=>1,
+        ]);
+        return Response::json(array(
+            'status' => 200,
+            'message' => 'updated successfully',
+        
+        ));
+
+    }
+    public function unactivate_account(Request $request)
+    {
+
+        Specialist::where('id', Auth::guard('specialist-api')->user()->id)->update([
+            'is_active' => 0,
+        ]);
+        return Response::json(array(
+            'status' => 200,
+            'message' => 'updated successfully',
+
         ));
     }
 }

@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api\Specialists;
 
 use App\Http\Controllers\Controller;
 use App\Models\Negotation;
+use App\Models\Order;
 use App\Models\OrderFile;
+use App\Models\OrderNormal;
+use App\Models\OrderNormalSpecialist;
 use App\Models\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -85,6 +88,80 @@ class HomeSpecialistController extends Controller
             'status' => 200,
             'message' => 'created successfully',
           
+        ));
+    }
+    public function get_all_schadule_orders()
+    {
+        $data = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status','schadule')->get();
+        return Response::json(array(
+            'status' => 200,
+            'data' =>$data,
+
+
+        ));
+        
+    }
+    public function get_all_finished_orders()
+    {
+        $data = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
+        return Response::json(array(
+            'status' => 200,
+            'data' => $data,
+
+
+        ));
+    }
+    public function get_all_cancelled_orders()
+    {
+        $data = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
+        return Response::json(array(
+            'status' => 200,
+            'data' => $data,
+
+
+        ));
+    }
+
+    public function get_all_finished_service_orders()
+    {
+        $data = OrderService::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
+        return Response::json(array(
+            'status' => 200,
+            'data' => $data,
+
+
+        ));
+    }
+    public function get_all_cancelled_service_orders()
+    {
+        $data = OrderService::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
+        return Response::json(array(
+            'status' => 200,
+            'data' => $data,
+
+
+        ));
+    }
+    public function get_all_finished_normal_orders()
+    {
+        $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
+        $normal_order = OrderNormal::with(['user', 'coupon'])->whereIn('id', $data->pluck('order_id'))->where('status', 'finished')->get();
+        return Response::json(array(
+            'status' => 200,
+            'data' => $normal_order,
+
+
+        ));
+    }
+    public function get_all_cancelled_normal_orders()
+    {
+        $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
+        $normal_order = OrderNormal::with(['user', 'coupon'])->whereIn('id', $data->pluck('order_id'))->where('status', 'cancelled')->get();
+        return Response::json(array(
+            'status' => 200,
+            'data' =>$normal_order,
+
+
         ));
     }
 
