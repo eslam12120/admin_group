@@ -88,7 +88,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::post('specialist/data',  [SpecialistController::class, 'get_all_data']);
         Route::post('specialist/password/reset', [ResetPasswordController::class, 'code']);
     });
-    Route::group(['middleware' => 'checkUser:specialist-api'], function () {
+    Route::group(['middleware' => 'checkSpec:specialist-api'], function () {
         // Route::post('user/logout', [AuthController::class, 'logout']);
         Route::get('specialist/getSpecialistData', [SpecialistController::class, 'getSpecialistData']);
         Route::get('specialist/services/orders', [HomeSpecialistController::class, 'getData']);
