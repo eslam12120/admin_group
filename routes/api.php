@@ -128,7 +128,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('specialist/get/all/cancelled/normal/orders', [HomeSpecialistController::class, 'get_all_cancelled_normal_orders']);
         Route::post('specialist/edit/{id}', [SpecialistController::class, 'edit'])->name('specialists.edit');
     });
-
+});
     Route::post('admin/login', [AuthAdminController::class, 'login']);
     /*ADMIN*/
     Route::group(['middleware' => 'checkAdmin:admin-api'], function () {
@@ -159,4 +159,4 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::resource('admin/educations', EducationController::class);
         Route::resource('admin/cities', CityController::class);
     });
-});
+
