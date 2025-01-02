@@ -127,6 +127,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('specialist/get/all/cancelled/service/orders', [HomeSpecialistController::class, 'get_all_cancelled_service_orders']);
         Route::get('specialist/get/all/finished/normal/orders', [HomeSpecialistController::class, 'get_all_finished_normal_orders']);
         Route::get('specialist/get/all/cancelled/normal/orders', [HomeSpecialistController::class, 'get_all_cancelled_normal_orders']);
+        Route::post('specialist/edit/{id}', [SpecialistController::class, 'edit'])->name('specialists.edit');
     });
 
     Route::post('admin/login', [AuthAdminController::class, 'login']);
