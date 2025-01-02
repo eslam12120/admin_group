@@ -138,7 +138,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         // User Management
         Route::post('admin/add/user', [UserCrudController::class, 'add_user']);
         Route::post('admin/user/edit', [UserCrudController::class, 'update_user']);
-        Route::delete('admin/user/delete', [UserCrudController::class, 'delete_user']);
+        Route::post('admin/user/delete', [UserCrudController::class, 'delete_user']);
         Route::get('admin/get/user/{id}', [UserCrudController::class, 'show']);
         Route::get('admin/all/users', [UserCrudController::class, 'index']);
         // Admin Management
