@@ -29,10 +29,9 @@ class UserCrudController extends Controller
     public function show($id)
     {
         $user = User::where('id', $id)->first();
-        if($user){
-         $user->image_url= asset('images/users/' . $user->image);
-        }
-        else{
+        if ($user) {
+            $user->image_url = asset('images/users/' . $user->image);
+        } else {
             $user->image_url = null;
         }
         return response()->json([
@@ -117,14 +116,18 @@ class UserCrudController extends Controller
                 $name = "user-" . uniqid() . ".$ext";
                 $photo->move(public_path('images/users'), $name);
             }
-
-
+            if ($request->password) {
+                $pass = Hash::make($request->password);
+            } else {
+                $pass = $user->password;
+            }
             // Update user attributes
             $user->update([
                 'email' => $request->email ?? $user->email,
                 'name' => $request->name ?? $user->name,
                 'phone' => $request->phone ?? $user->phone,
                 'image' => $name,
+                'password' =>  $pass,
             ]);
 
             DB::commit();
