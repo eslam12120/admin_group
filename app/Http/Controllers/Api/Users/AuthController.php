@@ -108,41 +108,40 @@ class AuthController extends Controller
             $user = User::where('email', $request->email)->first();
             $user->device_token = $request->device_token;
             $user->save();
-             if($user->is_verify == '0'){
-            $user_otp = UserVerification::where('user_id', $user->id)->latest()->first();
-            if ($user_otp) {
-                $user_otp->delete();
-            }
+            if ($user->is_verify == '0') {
+                $user_otp = UserVerification::where('user_id', $user->id)->latest()->first();
+                if ($user_otp) {
+                    $user_otp->delete();
+                }
 
-            $code = mt_rand(100000, 999999);
-            $user_verification = UserVerification::create([
+                $code = mt_rand(100000, 999999);
+                $user_verification = UserVerification::create([
 
-                'user_id' => $user->id,
-                'code' => $code,
-
-
-
-            ]);
+                    'user_id' => $user->id,
+                    'code' => $code,
 
 
 
-            // Send email to user
-            //  Mail::to($request->email)->send(new OtpCode($code));
+                ]);
 
-            // return Response::json(array(
-            //     'status'=>200,
-            //     'message'=>'true',
-            //     'data'=>$allwishlist,
-            // ));
 
-            DB::commit();
-            $token=null;
-            return $this->respondWithToken_otp($token , $code);
-             }
-           else{
+
+                // Send email to user
+                //  Mail::to($request->email)->send(new OtpCode($code));
+
+                // return Response::json(array(
+                //     'status'=>200,
+                //     'message'=>'true',
+                //     'data'=>$allwishlist,
+                // ));
+
+                DB::commit();
+                $token = null;
+                return $this->respondWithToken_otp($token, $code, $user->id);
+            } else {
                 $token = auth()->guard('user-api')->login($user);
-                return $this->respondWithToken($token); 
-           }
+                return $this->respondWithToken($token);
+            }
         } catch (Exception $e) {
             // Rollback all operations if an error occurs
             DB::rollBack();
@@ -183,7 +182,7 @@ class AuthController extends Controller
             $token = auth()->guard('user-api')->login($user);
             $user_otp->delete();
             $user->device_token = $request->device_token;
-             $user->is_verify = '1';
+            $user->is_verify = '1';
             $user->save();
             return $this->respondWithToken($token);
         } else {
@@ -201,15 +200,15 @@ class AuthController extends Controller
             'user' => Auth::guard('user-api')->user(),
         ]);
     }
-      protected function respondWithToken_otp($token,$code)
+    protected function respondWithToken_otp($token, $code, $user_id)
     {
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'status' => 200,
             'message' => trans('auth.login.success'),
-            'user' => Auth::guard('user-api')->user(),
-            'code'=>$code
+            'user' => User::where('id', $user_id)->first(),
+            'code' => $code
         ]);
     }
     public function logout(Request $request)
