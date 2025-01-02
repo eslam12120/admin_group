@@ -361,7 +361,10 @@ class HomeController extends Controller
         $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
         $specialist['image_url'] = asset('specialist_images/' . $specialist->image);
 
-        $orders = Order::where('id', $id)->where('status', 'finished')->count();
+        $orders_1 = Order::where('specialist_id', $specialist->id)->where('status', 'finished')->count();
+        $orders_2 = OrderNormalSpecialist::where('specialist_id', $specialist->id)->count();
+        $orders_3 = OrderService::where('specialist_id', $specialist->id)->where('status', 'finished')->count();
+        $orders =  $orders_1 +  $orders_2 +  $orders_3;
         // Return the specialist data
         return Response::json([
             'status' => 200,
