@@ -100,12 +100,16 @@ class AdminCrudController extends Controller
         DB::beginTransaction();
         try {
             $user = Admin::findOrFail($request->id);
-
+            if ($request->password) {
+                $pass = Hash::make($request->password);
+            } else {
+                $pass = $user->password;
+            }
             // Update user attributes
             $user->update([
                 'email' => $request->email ?? $user->email,
                 'name' => $request->name ?? $user->name,
-
+                'password' => $pass
             ]);
 
             DB::commit();
