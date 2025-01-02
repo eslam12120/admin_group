@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\AdminApi;
 
 use App\Models\Rate;
+use App\Models\Order;
 use App\Models\Experience;
 use App\Models\Specialist;
 use App\Models\Certificates;
+use App\Models\OrderService;
 use Illuminate\Http\Request;
 use App\Models\SkillSpecialist;
 use App\Models\SpecialistSpecial;
 use App\Models\LanguageSpecialist;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\OrderNormalSpecialist;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,6 +25,10 @@ class SpecialistController extends Controller
         $specialists = Specialist::whereIn('status', ['1', '0'])->paginate(30);
         $specialists->getCollection()->transform(function ($specialist) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
+            $orders_1 = Order::where('specialist_id', $specialist->id)->where('status', 'finished')->count();
+            $orders_2 = OrderNormalSpecialist::where('specialist_id', $specialist->id)->count();
+            $orders_3 = OrderService::where('specialist_id', $specialist->id)->where('status', 'finished')->count();
+            $specialist->$orders =  $orders_1 +  $orders_2 +  $orders_3;
             return $specialist;
         });
         return response()->json([
