@@ -28,7 +28,7 @@ class SpecialistController extends Controller
             $orders_1 = Order::where('specialist_id', $specialist->id)->where('status', 'finished')->count();
             $orders_2 = OrderNormalSpecialist::where('specialist_id', $specialist->id)->count();
             $orders_3 = OrderService::where('specialist_id', $specialist->id)->where('status', 'finished')->count();
-            $specialist->$orders =  $orders_1 +  $orders_2 +  $orders_3;
+            $specialist->orders = $orders_1 + $orders_2 + $orders_3; // Corrected line
             return $specialist;
         });
         return response()->json([
