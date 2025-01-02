@@ -1,18 +1,24 @@
 <?php
 
-use App\Http\Controllers\AdminApi\AdminCrudController;
-use App\Http\Controllers\AdminApi\AuthAdminController;
-use App\Http\Controllers\AdminApi\UserCrudController;
 use App\Models\Specialist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\AdminApi\CityController;
 use App\Http\Controllers\Api\Users\AuthController;
+use App\Http\Controllers\AdminApi\ServiceController;
+use App\Http\Controllers\AdminApi\SpecialController;
+use App\Http\Controllers\AdminApi\LanguageController;
+use App\Http\Controllers\AdminApi\UserCrudController;
+use App\Http\Controllers\AdminApi\AdminCrudController;
+use App\Http\Controllers\AdminApi\AuthAdminController;
+use App\Http\Controllers\AdminApi\EducationController;
+use App\Http\Controllers\AdminApi\GovernmentController;
+use App\Http\Controllers\AdminApi\SpecialistController as AdminApiSpecialistController;
 use App\Http\Controllers\Api\Users\EditProfileController;
 use App\Http\Controllers\Api\Users\ResetPasswordController;
 use App\Http\Controllers\Api\Users\ForgotPasswordController;
-
 use App\Http\Controllers\Api\Specialists\SpecialistController;
 use App\Http\Controllers\Api\Specialists\HomeSpecialistController;
 use App\Http\Controllers\Api\Specialists\OrdersSpecialistController;
@@ -35,8 +41,8 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
     Route::get('search/specialist', [HomeController::class, 'search_specialist']);
     Route::get('sort/specialist', [HomeController::class, 'sort_by']);
     Route::get('filter/specialist', [HomeController::class, 'filter_by']);
-    Route::get('get/data/specialist/{id}', [HomeController::class,'getSpecialistData']);
-    Route::get('services/specials', [HomeController::class,'services_specials']);
+    Route::get('get/data/specialist/{id}', [HomeController::class, 'getSpecialistData']);
+    Route::get('services/specials', [HomeController::class, 'services_specials']);
 
 
 
@@ -79,7 +85,6 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
 
         // Reject the offer
         Route::post('/reject-offer', [HomeController::class, 'reject_offers']);
-
     });
     Route::group(['namespace' => 'auth-specialist'], function () {
 
@@ -96,7 +101,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('specialist/getSpecialistData', [SpecialistController::class, 'getSpecialistData']);
         Route::get('specialist/services/orders', [HomeSpecialistController::class, 'getData']);
         Route::post('specialist/services/orders/by/id', [HomeSpecialistController::class, 'get_data_by_id']);
-          Route::post('specialist/services/add/negotation', [HomeSpecialistController::class, 'add_negotation']);
+        Route::post('specialist/services/add/negotation', [HomeSpecialistController::class, 'add_negotation']);
         // Route::post('user/change_password', [EditProfileController::class, 'change_password'])->middleware('checkUser:user-api');
         // Route::post('user/rate', [HomeController::class, 'add_rate']);
         // Route::get('user_notifications', [HomeController::class, 'userNotifications'])->name('userNotifications');
@@ -114,7 +119,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::post('specialist/service/orders/finished', [OrdersSpecialistController::class, 'service_order_finished']);
         Route::post('specialist/service/orders/cancelled', [OrdersSpecialistController::class, 'service_order_cancelled']);
         Route::post('specialist/activate/account', [SpecialistController::class, 'activate_account']);
-        Route::post('specialist/unactivate/account', [SpecialistController::class,'unactivate_account']);
+        Route::post('specialist/unactivate/account', [SpecialistController::class, 'unactivate_account']);
         Route::get('specialist/get/all/finished/orders', [HomeSpecialistController::class, 'get_all_finished_orders']);
         Route::get('specialist/get/all/schadule/orders', [HomeSpecialistController::class, 'get_all_schadule_orders']);
         Route::get('specialist/get/all/cancelled/orders', [HomeSpecialistController::class, 'get_all_cancelled_orders']);
@@ -124,19 +129,34 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('specialist/get/all/cancelled/normal/orders', [HomeSpecialistController::class, 'get_all_cancelled_normal_orders']);
     });
 
+    Route::post('admin/login', [AuthAdminController::class, 'login']);
     /*ADMIN*/
-    Route::group(['namespace' => 'Admin_Auth'], function () {
-        Route::post('admin/login', [AuthAdminController::class, 'login']);
+    Route::group(['namespace' => 'Admin_Auth', 'middleware' => 'checkAdmin:admin-api'], function () {
+
         Route::post('admin/logout', [AuthAdminController::class, 'logout']);
+        // User Management
         Route::post('admin/add/user', [UserCrudController::class, 'add_user']);
         Route::post('admin/user/edit', [UserCrudController::class, 'update_user']);
-        Route::post('admin/user/delete', [UserCrudController::class, 'delete_user']);
+        Route::delete('admin/user/delete', [UserCrudController::class, 'delete_user']);
+        Route::get('admin/get/user/{id}', [UserCrudController::class, 'show']);
+        Route::get('admin/all/users', [UserCrudController::class, 'index']);
+        // Admin Management
         Route::post('admin/add/admin', [AdminCrudController::class, 'add_admin']);
         Route::post('admin/edit/admin', [AdminCrudController::class, 'update_admin']);
-        Route::post('admin/delete/admin', [AdminCrudController::class, 'delete_admin']);
-       
+        Route::delete('admin/delete/admin', [AdminCrudController::class, 'delete_admin']);
+        Route::get('admin/get/admin/{id}', [AdminCrudController::class, 'show']);
+        Route::get('admin/all/admins', [AdminCrudController::class, 'index']);
+        // Specialists
+        Route::resource('admin/specialists', AdminApiSpecialistController::class);
+        Route::get('admin/get/specialist/{id}', [AdminApiSpecialistController::class, 'show']);
+        Route::get('admin/all/specialists', [AdminApiSpecialistController::class, 'index']);
+
+        // Resource Controllers
+        Route::resource('admin/specials', SpecialController::class);
+        Route::resource('admin/services', ServiceController::class);
+        Route::resource('admin/languages', LanguageController::class);
+        Route::resource('admin/governments', GovernmentController::class);
+        Route::resource('admin/educations', EducationController::class);
+        Route::resource('admin/cities', CityController::class);
     });
-
-    
-
 });

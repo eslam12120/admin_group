@@ -13,13 +13,30 @@ use Illuminate\Support\Facades\Validator;
 class AdminCrudController extends Controller
 {
     //
+    public function index()
+    {
+        $admins = Admin::paginate(30);
+        return response()->json([
+            'message' => 'Admins retrieved successfully',
+            'data' => $admins,
+        ], 200);
+    }
+
+    public function show($id)
+    {
+        $admin = Admin::where('id', $id)->first();
+        return response()->json([
+            'message' => 'Admin retrieved successfully',
+            'data' => $admin,
+        ], 200);
+    }
     public function add_admin(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|unique:users,email',
             'password' => 'required',
             'name' => 'required',
-           
+
         ], [
             'email.required' => trans('auth.email.register'),
             'password.required' => trans('auth.password.register'),
@@ -38,9 +55,9 @@ class AdminCrudController extends Controller
 
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-               
+
                 'name' => $request->name,
-             
+
             ]);
 
             DB::commit();
@@ -88,7 +105,7 @@ class AdminCrudController extends Controller
             $user->update([
                 'email' => $request->email ?? $user->email,
                 'name' => $request->name ?? $user->name,
-              
+
             ]);
 
             DB::commit();
@@ -123,5 +140,4 @@ class AdminCrudController extends Controller
             return response()->json(['error' => 'Failed to delete user: ' . $e->getMessage()], 400);
         }
     }
-
 }
