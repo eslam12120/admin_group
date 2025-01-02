@@ -13,6 +13,23 @@ use Illuminate\Support\Facades\Validator;
 class UserCrudController extends Controller
 {
     //
+    public function index()
+    {
+        $users = User::whereIn('is_verify', ['1', '0'])->paginate(30);
+        return response()->json([
+            'message' => 'Users retrieved successfully',
+            'data' => $users,
+        ], 200);
+    }
+
+    public function show($id)
+    {
+        $user = User::where('id', $id)->first();
+        return response()->json([
+            'message' => 'Users retrieved successfully',
+            'data' => $user,
+        ], 200);
+    }
     public function add_user(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -65,7 +82,7 @@ class UserCrudController extends Controller
             'email' => 'nullable|email|unique:users,email,' . $request->id,
 
             'name' => 'nullable|string|max:255',
-           
+
         ], [
             'email.email' => trans('auth.email.invalid'),
             'password.confirmed' => trans('auth.password.mismatch'),
@@ -118,20 +135,18 @@ class UserCrudController extends Controller
         DB::beginTransaction();
         try {
             $user = User::findOrFail($request->id);
-
-            $user->delete();
-
+            $user->update([
+                'is_verify' => '2',
+            ]);
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
                 'message' => trans('auth.user.deleted'),
             ], 200);
-        
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['error' => 'Failed to delete user: ' . $e->getMessage()], 400);
         }
     }
-
 }

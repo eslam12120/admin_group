@@ -280,7 +280,7 @@ class SpecialistController extends Controller
         $city = City::select('id', 'name_' . app()->getLocale() . ' as name')->get();
         $government = Government::select('id', 'name_' . app()->getLocale() . ' as name')->get();
         $languages = Language::select('id', 'name_' . app()->getLocale() . ' as name')->get();
-        $specials = Special::select('id', 'name_' . app()->getLocale() . ' as name', 'job_name_ar', 'job_name_en')->get();
+        $specials = Special::select('id', 'name_' . app()->getLocale() . ' as name', 'job_name_' . app()->getLocale() . ' as job_name')->get();
         return response()->json([
             'message' => 'success',
             'cities' =>  $city,
@@ -298,8 +298,8 @@ class SpecialistController extends Controller
             'status' => 200,
             'message' => 'true',
             'data' => $orders,
-            'normal_orders'=>$normal_order,
-            
+            'normal_orders' => $normal_order,
+
         ));
     }
     public function getSpecialistData()
@@ -313,7 +313,7 @@ class SpecialistController extends Controller
         $specialist->map(function ($specialist) {
 
             $specialist['specials'] = SpecialistSpecial::where('specialist_id', $specialist['id'])->select('id', 'specialist_id', 'special_id')->with(['specials' => function ($q) {
-                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                $q->select('id', 'name_' . app()->getLocale() . ' as name', 'job_name_' . app()->getLocale() . ' as job_name');
             }])->get();
         });
         $specialist->map(function ($specialist) {
@@ -336,7 +336,7 @@ class SpecialistController extends Controller
         });
         $specialist->map(function ($specialist) {
 
-            $specialist['image_url'] =asset('images/specialists/' . $specialist->image);
+            $specialist['image_url'] = asset('images/specialists/' . $specialist->image);
         });
 
         // التحقق من وجود المختص
@@ -355,15 +355,14 @@ class SpecialistController extends Controller
     public function activate_account(Request $request)
     {
 
-         Specialist::where('id', Auth::guard('specialist-api')->user()->id)->update([
-            'is_active'=>1,
+        Specialist::where('id', Auth::guard('specialist-api')->user()->id)->update([
+            'is_active' => 1,
         ]);
         return Response::json(array(
             'status' => 200,
             'message' => 'updated successfully',
-        
-        ));
 
+        ));
     }
     public function unactivate_account(Request $request)
     {
