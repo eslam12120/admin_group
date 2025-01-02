@@ -131,7 +131,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
 
     Route::post('admin/login', [AuthAdminController::class, 'login']);
     /*ADMIN*/
-    Route::group(['namespace' => 'Admin_Auth', 'middleware' => 'checkAdmin:admin-api'], function () {
+    Route::group(['middleware' => 'checkAdmin:admin-api'], function () {
 
         Route::post('admin/logout', [AuthAdminController::class, 'logout']);
         // User Management
