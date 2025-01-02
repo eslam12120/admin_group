@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\AdminApi\AdminCrudController;
+use App\Http\Controllers\AdminApi\AuthAdminController;
+use App\Http\Controllers\AdminApi\UserCrudController;
 use App\Models\Specialist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -120,5 +123,20 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('specialist/get/all/finished/normal/orders', [HomeSpecialistController::class, 'get_all_finished_normal_orders']);
         Route::get('specialist/get/all/cancelled/normal/orders', [HomeSpecialistController::class, 'get_all_cancelled_normal_orders']);
     });
+
+    /*ADMIN*/
+    Route::group(['namespace' => 'Admin_Auth'], function () {
+        Route::post('admin/login', [AuthAdminController::class, 'login']);
+        Route::post('admin/logout', [AuthAdminController::class, 'logout']);
+        Route::post('admin/add/user', [UserCrudController::class, 'add_user']);
+        Route::post('admin/user/edit', [UserCrudController::class, 'update_user']);
+        Route::post('admin/user/delete', [UserCrudController::class, 'delete_user']);
+        Route::post('admin/add/admin', [AdminCrudController::class, 'add_admin']);
+        Route::post('admin/edit/admin', [AdminCrudController::class, 'update_admin']);
+        Route::post('admin/delete/admin', [AdminCrudController::class, 'delete_admin']);
+       
+    });
+
+    
 
 });
