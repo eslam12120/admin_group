@@ -16,6 +16,10 @@ class UserCrudController extends Controller
     public function index()
     {
         $users = User::whereIn('is_verify', ['1', '0'])->paginate(30);
+        $users->getCollection()->transform(function ($user) {
+            $user->image_url = asset('images/users/' . $user->image);
+            return $user;
+        });
         return response()->json([
             'message' => 'Users retrieved successfully',
             'data' => $users,
@@ -25,6 +29,12 @@ class UserCrudController extends Controller
     public function show($id)
     {
         $user = User::where('id', $id)->first();
+        if($user){
+         $user->image_url= asset('images/users/' . $user->image);
+        }
+        else{
+            $user->image_url = null;
+        }
         return response()->json([
             'message' => 'Users retrieved successfully',
             'data' => $user,
