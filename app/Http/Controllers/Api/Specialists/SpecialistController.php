@@ -266,7 +266,7 @@ class SpecialistController extends Controller
                 ]);
                 DB::commit();
                 $token = null;
-                return $this->respondWithToken_otp($token, $code);
+                return $this->respondWithToken_otp($token, $code , $user->id);
             } else {
                 $token = auth()->guard('user-api')->login($user);
                 return $this->respondWithToken($token);
@@ -311,6 +311,7 @@ class SpecialistController extends Controller
             $token = auth()->guard('specialist-api')->login($user);
             $user_otp->delete();
             $user->device_token = $request->device_token;
+            $user->is_verify = '1';
             $user->save();
             return $this->respondWithToken($token);
         } else {
@@ -326,19 +327,19 @@ class SpecialistController extends Controller
             'status' => 200,
             'message' => trans('auth.login.success'),
             'user' => Auth::guard('specialist-api')->user(),
-            'is_verify' => '1',
+            'is_verify' => 1,
         ]);
     }
-    protected function respondWithToken_otp($token, $code)
+    protected function respondWithToken_otp($token, $code , $user_id)
     {
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'status' => 200,
             'message' => trans('auth.login.success'),
-            'user' => Auth::guard('specialist-api')->user(),
+            'user' => Specialist::where('id', $user_id)->first(),
             'code' => $code,
-            'is_verify' => '0',
+            'is_verify' => 0,
         ]);
     }
     public function logout(Request $request)
@@ -372,9 +373,9 @@ class SpecialistController extends Controller
     }
     public function get_all_orders_for_user(Request $request)
     {
-        $orders = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
+        $orders = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
         $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
-        $normal_order = OrderNormal::with(['user', 'coupon'])->whereIn('id', $data->pluck('order_id'))->get();
+        $normal_order = OrderNormal::with(['user'])->whereIn('id', $data->pluck('order_id'))->get();
         return Response::json(array(
             'status' => 200,
             'message' => 'true',

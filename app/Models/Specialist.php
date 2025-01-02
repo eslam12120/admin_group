@@ -13,6 +13,10 @@ class Specialist extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
     protected $guarded = [];
+      protected $hidden = [
+        'password',
+        'is_verify',
+    ];
     public function rate()
     {
         return $this->hasMany(Rate::class);
