@@ -15,7 +15,6 @@ use App\Http\Controllers\AdminApi\AdminCrudController;
 use App\Http\Controllers\AdminApi\AuthAdminController;
 use App\Http\Controllers\AdminApi\EducationController;
 use App\Http\Controllers\AdminApi\GovernmentController;
-use App\Http\Controllers\AdminApi\SpecialistController as AdminApiSpecialistController;
 use App\Http\Controllers\Api\Users\EditProfileController;
 use App\Http\Controllers\Api\Users\ResetPasswordController;
 use App\Http\Controllers\Api\Users\ForgotPasswordController;
@@ -148,9 +147,9 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('admin/get/admin/{id}', [AdminCrudController::class, 'show']);
         Route::get('admin/all/admins', [AdminCrudController::class, 'index']);
         // Specialists
-        Route::resource('admin/specialists', AdminApiSpecialistController::class);
-        Route::get('admin/get/specialist/{id}', [AdminApiSpecialistController::class, 'show']);
-        Route::get('admin/all/specialists', [AdminApiSpecialistController::class, 'index']);
+        Route::resource('admin/specialists', \App\Http\Controllers\AdminApi\SpecialistController::class);
+        Route::get('admin/get/specialist/{id}', [\App\Http\Controllers\AdminApi\SpecialistController::class, 'show']);
+        Route::get('admin/all/specialists', [\App\Http\Controllers\AdminApi\SpecialistController::class, 'index']);
 
         // Resource Controllers
         Route::resource('admin/specials', SpecialController::class);
