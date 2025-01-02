@@ -400,7 +400,7 @@ class HomeController extends Controller
             'user_id' => Auth::id(),
             'coupoun_id' => $request->coupoun_id,
             'audio_path' => $audioPath, // Save audio path
-           // 'file_path' => $filePath, // Save file path
+            // 'file_path' => $filePath, // Save file path
         ]);
         if ($request->coupoun_id) {
             UserCoupoun::create([
@@ -534,7 +534,8 @@ class HomeController extends Controller
         $specialist = Negotation::where('id', $request->id)->first();
         OrderService::where('id', $request->order_id)->update([
             'status' => 'approved',
-            'specialist_id' => $specialist->specialist_id ?? null
+            'specialist_id' => $specialist->specialist_id ?? null,
+            'price' => $specialist->price,
         ]);
         return response()->json([
             'message' => 'success'
