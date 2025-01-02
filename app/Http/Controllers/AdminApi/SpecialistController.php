@@ -17,7 +17,11 @@ class SpecialistController extends Controller
 {
     public function index()
     {
-        $specialists = Specialist::whereIn('active',['1','0'])->with(['languages', 'experiences', 'certificates', 'skills', 'specializations'])->paginate(30);
+        $specialists = Specialist::whereIn('active', ['1', '0'])->with(['languages', 'experiences', 'certificates', 'skills', 'specializations'])->paginate(30);
+        $specialists->getCollection()->transform(function ($specialist) {
+            $specialist->image_url = asset('specialist_images/' . $specialist->image);
+            return $specialist;
+        });
         return response()->json([
             'message' => 'Specialists retrieved successfully',
             'data' => $specialists,
@@ -30,7 +34,11 @@ class SpecialistController extends Controller
         if (!$specialist) {
             return response()->json(['message' => 'Specialist not found'], 404);
         }
-
+        if ($specialist) {
+            $specialist->image_url = asset('specialist_images/' . $specialist->image);
+        } else {
+            $specialist->image_url = null;
+        }
         return response()->json([
             'message' => 'Specialist retrieved successfully',
             'data' => $specialist,
