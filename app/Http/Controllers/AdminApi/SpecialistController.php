@@ -17,7 +17,7 @@ class SpecialistController extends Controller
 {
     public function index()
     {
-        $specialists = Specialist::whereIn('active', ['1', '0'])->with(['languages', 'experiences', 'certificates', 'skills', 'specializations'])->paginate(30);
+        $specialists = Specialist::whereIn('status', ['1', '0'])->with(['languages', 'experiences', 'certificates', 'skills', 'specializations'])->paginate(30);
         $specialists->getCollection()->transform(function ($specialist) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
             return $specialist;
