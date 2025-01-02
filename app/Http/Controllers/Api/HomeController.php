@@ -400,7 +400,7 @@ class HomeController extends Controller
             'user_id' => Auth::id(),
             'coupoun_id' => $request->coupoun_id,
             'audio_path' => $audioPath, // Save audio path
-            'file_path' => $filePath, // Save file path
+           // 'file_path' => $filePath, // Save file path
         ]);
         if ($request->coupoun_id) {
             UserCoupoun::create([
