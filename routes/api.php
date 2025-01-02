@@ -129,34 +129,33 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::post('specialist/edit/{id}', [SpecialistController::class, 'edit'])->name('specialists.edit');
     });
 });
-    Route::post('admin/login', [AuthAdminController::class, 'login']);
-    /*ADMIN*/
-    Route::group(['middleware' => 'checkAdmin:admin-api'], function () {
+Route::post('admin/login', [AuthAdminController::class, 'login']);
+/*ADMIN*/
+Route::group(['middleware' => 'checkAdmin:admin-api'], function () {
 
-        Route::post('admin/logout', [AuthAdminController::class, 'logout']);
-        // User Management
-        Route::post('admin/add/user', [UserCrudController::class, 'add_user']);
-        Route::post('admin/user/edit', [UserCrudController::class, 'update_user']);
-        Route::post('admin/user/delete', [UserCrudController::class, 'delete_user']);
-        Route::get('admin/get/user/{id}', [UserCrudController::class, 'show']);
-        Route::get('admin/all/users', [UserCrudController::class, 'index']);
-        // Admin Management
-        Route::post('admin/add/admin', [AdminCrudController::class, 'add_admin']);
-        Route::post('admin/edit/admin', [AdminCrudController::class, 'update_admin']);
-        Route::delete('admin/delete/admin', [AdminCrudController::class, 'delete_admin']);
-        Route::get('admin/get/admin/{id}', [AdminCrudController::class, 'show']);
-        Route::get('admin/all/admins', [AdminCrudController::class, 'index']);
-        // Specialists
-        Route::resource('admin/specialists', \App\Http\Controllers\AdminApi\SpecialistController::class);
-        Route::get('admin/get/specialist/{id}', [\App\Http\Controllers\AdminApi\SpecialistController::class, 'show']);
-        Route::get('admin/all/specialists', [\App\Http\Controllers\AdminApi\SpecialistController::class, 'index']);
+    Route::post('admin/logout', [AuthAdminController::class, 'logout']);
+    // User Management
+    Route::post('admin/add/user', [UserCrudController::class, 'add_user']);
+    Route::post('admin/user/edit', [UserCrudController::class, 'update_user']);
+    Route::post('admin/user/delete', [UserCrudController::class, 'delete_user']);
+    Route::get('admin/get/user/{id}', [UserCrudController::class, 'show']);
+    Route::get('admin/all/users', [UserCrudController::class, 'index']);
+    // Admin Management
+    Route::post('admin/add/admin', [AdminCrudController::class, 'add_admin']);
+    Route::post('admin/edit/admin', [AdminCrudController::class, 'update_admin']);
+    Route::delete('admin/delete/admin', [AdminCrudController::class, 'delete_admin']);
+    Route::get('admin/get/admin/{id}', [AdminCrudController::class, 'show']);
+    Route::get('admin/all/admins', [AdminCrudController::class, 'index']);
+    // Specialists
+    Route::resource('admin/specialists', \App\Http\Controllers\AdminApi\SpecialistController::class);
+    //  Route::get('admin/get/specialist/{id}', [\App\Http\Controllers\AdminApi\SpecialistController::class, 'show']);
+    // Route::get('admin/all/specialists', [\App\Http\Controllers\AdminApi\SpecialistController::class, 'index']);
 
-        // Resource Controllers
-        Route::resource('admin/specials', SpecialController::class);
-        Route::resource('admin/services', ServiceController::class);
-        Route::resource('admin/languages', LanguageController::class);
-        Route::resource('admin/governments', GovernmentController::class);
-        Route::resource('admin/educations', EducationController::class);
-        Route::resource('admin/cities', CityController::class);
-    });
-
+    // Resource Controllers
+    Route::resource('admin/specials', SpecialController::class);
+    Route::resource('admin/services', ServiceController::class);
+    Route::resource('admin/languages', LanguageController::class);
+    Route::resource('admin/governments', GovernmentController::class);
+    Route::resource('admin/educations', EducationController::class);
+    Route::resource('admin/cities', CityController::class);
+});

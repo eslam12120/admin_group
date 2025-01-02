@@ -92,7 +92,7 @@ class SpecialistController extends Controller
         ], 200);
     }
 
-    public function create(Request $request)
+    public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
