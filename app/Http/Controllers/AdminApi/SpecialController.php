@@ -66,7 +66,10 @@ class SpecialController extends Controller
             return response()->json(['message' => 'Special not found'], 404);
         }
 
-        return response()->json($special, 200);
+        return response()->json([
+            'message' => 'Special show successfully!',
+            'data' =>  $special,
+        ], 200);
     }
 
     public function update(Request $request, $id)
