@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\AdminApi;
 
+use App\Models\Rate;
 use App\Models\Experience;
 use App\Models\Specialist;
 use App\Models\Certificates;
@@ -11,13 +12,14 @@ use App\Models\SpecialistSpecial;
 use App\Models\LanguageSpecialist;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 
 class SpecialistController extends Controller
 {
     public function index()
     {
-        $specialists = Specialist::whereIn('status', ['1', '0'])->with(['languages', 'experiences', 'certificates', 'skills', 'specializations'])->paginate(30);
+        $specialists = Specialist::whereIn('status', ['1', '0'])->paginate(30);
         $specialists->getCollection()->transform(function ($specialist) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
             return $specialist;
@@ -29,21 +31,67 @@ class SpecialistController extends Controller
     }
     public function show($id)
     {
-        $specialist = Specialist::with(['languages', 'experiences', 'certificates', 'skills', 'specializations'])->find($id);
+        // Fetch specialist data based on ID, including city and government relations
+        $specialist = Specialist::where('id', $id)
+            ->with([
+                'city' => function ($q) {
+                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                },
+                'government' => function ($q) {
+                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                },
+            ])
+            ->first();
 
+        // Check if the specialist exists
         if (!$specialist) {
-            return response()->json(['message' => 'Specialist not found'], 404);
+            return Response::json([
+                'status' => 404,
+                'message' => 'Specialist not found',
+                'data' => null,
+            ]);
         }
-        if ($specialist) {
-            $specialist->image_url = asset('specialist_images/' . $specialist->image);
-        } else {
-            $specialist->image_url = null;
-        }
+
+        // Add additional data to the specialist
+        $specialist['specials'] = SpecialistSpecial::where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'special_id')
+            ->with(['specials' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            }])
+            ->get();
+
+        $specialist['rates'] = Rate::with('user') // Load the related user for each rate
+            ->where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'rate', 'description', 'user_id')
+            ->get()
+            ->map(function ($rate) {
+                // Add the user's image URL to the rate
+                if ($rate->user) {
+                    $rate->user['image_url'] = asset('images/users/' . $rate->user->image);
+                }
+                return $rate;
+            });
+
+        $specialist['languages'] = LanguageSpecialist::where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'language_id')
+            ->with(['languages' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            }])
+            ->get();
+
+        $specialist['certificates'] = Certificates::where('specialist_id', $specialist['id'])->get();
+        $specialist['skills'] = SkillSpecialist::where('specialist_id', $specialist['id'])->get();
+        $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
+        $specialist['image_url'] = asset('specialist_images/' . $specialist->image);
+
+        // $orders = Order::where('id', $id)->where('status', 'finished')->count();
+        // Return the specialist data
         return response()->json([
             'message' => 'Specialist retrieved successfully',
             'data' => $specialist,
         ], 200);
     }
+
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [

@@ -359,7 +359,7 @@ class HomeController extends Controller
         $specialist['certificates'] = Certificates::where('specialist_id', $specialist['id'])->get();
         $specialist['skills'] = SkillSpecialist::where('specialist_id', $specialist['id'])->get();
         $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
-        $specialist['image_url'] = asset('images/specialists/' . $specialist->image);
+        $specialist['image_url'] = asset('specialist_images/' . $specialist->image);
 
         $orders = Order::where('id', $id)->where('status', 'finished')->count();
         // Return the specialist data
@@ -400,7 +400,7 @@ class HomeController extends Controller
             'user_id' => Auth::id(),
             'coupoun_id' => $request->coupoun_id,
             'audio_path' => $audioPath, // Save audio path
-           // 'file_path' => $filePath, // Save file path
+            // 'file_path' => $filePath, // Save file path
         ]);
         if ($request->coupoun_id) {
             UserCoupoun::create([

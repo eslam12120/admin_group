@@ -2,28 +2,29 @@
 
 namespace App\Http\Controllers\Api\Specialists;
 
-use App\Http\Controllers\Controller;
-use App\Models\Certificates;
+use Exception;
 use App\Models\City;
+use App\Models\Rate;
+use App\Models\Order;
+use App\Models\Special;
+use App\Models\Language;
 use App\Models\Experience;
 use App\Models\Government;
-use App\Models\Language;
-use App\Models\LanguageSpecialist;
-use App\Models\Order;
-use App\Models\OrderNormal;
-use App\Models\OrderNormalSpecialist;
-use App\Models\SkillSpecialist;
-use App\Models\Special;
 use App\Models\Specialist;
-use App\Models\SpecialistSpecial;
-use App\Models\SpecialistVerification;
-use Exception;
+use App\Models\OrderNormal;
+use App\Models\Certificates;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\SkillSpecialist;
+use App\Models\SpecialistSpecial;
+use App\Models\LanguageSpecialist;
 use Illuminate\Support\Facades\DB;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Models\OrderNormalSpecialist;
+use App\Models\SpecialistVerification;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class SpecialistController extends Controller
 {
@@ -266,7 +267,7 @@ class SpecialistController extends Controller
                 ]);
                 DB::commit();
                 $token = null;
-                return $this->respondWithToken_otp($token, $code , $user->id);
+                return $this->respondWithToken_otp($token, $code, $user->id);
             } else {
                 $token = auth()->guard('user-api')->login($user);
                 return $this->respondWithToken($token);
@@ -330,7 +331,7 @@ class SpecialistController extends Controller
             'is_verify' => 1,
         ]);
     }
-    protected function respondWithToken_otp($token, $code , $user_id)
+    protected function respondWithToken_otp($token, $code, $user_id)
     {
         return response()->json([
             'access_token' => $token,
@@ -386,48 +387,61 @@ class SpecialistController extends Controller
     }
     public function getSpecialistData()
     {
-        // جلب بيانات المختص بناءً على الـ ID الموجود في التوكن (المستخدم عبر الـ API)
-        $specialist = Specialist::with(['city' => function ($q) {
-            $q->select('id', 'name_' . app()->getLocale() . ' as name');
-        }, 'government' => function ($q) {
-            $q->select('id', 'name_' . app()->getLocale() . ' as name');
-        },])->where('id', Auth::guard('specialist-api')->user()->id)->get();
-        $specialist->map(function ($specialist) {
+        // Fetch specialist data based on ID, including city and government relations
+        $specialist = Specialist::where('id', Auth::id())
+            ->with([
+                'city' => function ($q) {
+                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                },
+                'government' => function ($q) {
+                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                },
+            ])
+            ->first();
 
-            $specialist['specials'] = SpecialistSpecial::where('specialist_id', $specialist['id'])->select('id', 'specialist_id', 'special_id')->with(['specials' => function ($q) {
-                $q->select('id', 'name_' . app()->getLocale() . ' as name', 'job_name_' . app()->getLocale() . ' as job_name');
-            }])->get();
-        });
-        $specialist->map(function ($specialist) {
+        // Check if the specialist exists
+        if (!$specialist) {
+            return Response::json([
+                'status' => 404,
+                'message' => 'Specialist not found',
+                'data' => null,
+            ]);
+        }
 
-            $specialist['languages'] = LanguageSpecialist::where('specialist_id', $specialist['id'])->select('id', 'specialist_id', 'language_id')->with(['languages' => function ($q) {
+        // Add additional data to the specialist
+        $specialist['specials'] = SpecialistSpecial::where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'special_id')
+            ->with(['specials' => function ($q) {
                 $q->select('id', 'name_' . app()->getLocale() . ' as name');
-            }])->get();
-        });
-        $specialist->map(function ($specialist) {
+            }])
+            ->get();
 
-            $specialist['certificates'] = Certificates::where('specialist_id', $specialist['id'])->get();
-        });
-        $specialist->map(function ($specialist) {
+        $specialist['rates'] = Rate::with('user') // Load the related user for each rate
+            ->where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'rate', 'description', 'user_id')
+            ->get()
+            ->map(function ($rate) {
+                // Add the user's image URL to the rate
+                if ($rate->user) {
+                    $rate->user['image_url'] = asset('images/users/' . $rate->user->image);
+                }
+                return $rate;
+            });
 
-            $specialist['skills'] = SkillSpecialist::where('specialist_id', $specialist['id'])->get();
-        });
-        $specialist->map(function ($specialist) {
+        $specialist['languages'] = LanguageSpecialist::where('specialist_id', $specialist['id'])
+            ->select('id', 'specialist_id', 'language_id')
+            ->with(['languages' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            }])
+            ->get();
 
-            $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
-        });
-        $specialist->map(function ($specialist) {
+        $specialist['certificates'] = Certificates::where('specialist_id', $specialist['id'])->get();
+        $specialist['skills'] = SkillSpecialist::where('specialist_id', $specialist['id'])->get();
+        $specialist['experiences'] = Experience::where('specialist_id', $specialist['id'])->get();
+        $specialist['image_url'] = asset('specialist_images/' . $specialist->image);
 
-            $specialist['image_url'] = asset('images/specialists/' . $specialist->image);
-        });
-
-        // التحقق من وجود المختص
-        // if ($specialist) {
-        //     // إضافة الرابط الكامل للصورة
-        //     $specialist->image = asset('images/specialists/' . $specialist->image);
-        // }
-
-        // إرجاع البيانات في الاستجابة
+        //   $orders = Order::where('id', $id)->where('status', 'finished')->count();
+        // Return the specialist data
         return Response::json(array(
             'status' => 200,
             'message' => 'true',
@@ -461,124 +475,123 @@ class SpecialistController extends Controller
 
 
     public function edit(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|string',
-        'email' => "required|email|unique:specialists,email,$id",
-        'languages' => 'nullable|array',
-        'languages.*' => 'nullable|exists:languages,id',
-        'experiences' => 'nullable|array',
-        'experiences.*.id' => 'nullable|exists:experiences,id',
-        'experiences.*.name' => 'nullable|string',
-        'experiences.*.job' => 'nullable|string',
-        'experiences.*.start_date' => 'nullable|date',
-        'experiences.*.end_date' => 'nullable|date',
-        'certificates' => 'nullable|array',
-        'certificates.*.id' => 'nullable|exists:certificates,id',
-        'certificates.*.name' => 'nullable|string',
-        'certificates.*.body' => 'nullable|string',
-        'skills' => 'nullable|array',
-        'skills.*.id' => 'nullable|exists:skill_specialists,id',
-        'skills.*.name' => 'nullable|string',
-        'skills.*.cyp' => 'nullable|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json(['message' => $validator->errors()->first()], 422);
-    }
-
-    DB::beginTransaction();
-
-    try {
-        $specialist = Specialist::findOrFail($id);
-
-        if ($request->hasFile('image')) {
-            $photo = $request->file('image');
-            $ext = $photo->getClientOriginalName();
-            $name = "spec-" . uniqid() . ".$ext";
-            $photo->move(public_path('specialist_images/'), $name);
-            $specialist->image = $name;
-        }
-
-        $specialist->update([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'rate' => $request->rate ?? $specialist->rate,
-            'yxp' => $request->exp_years ?? $specialist->yxp,
-            'price' => $request->price ?? $specialist->price,
-            'about_me' => $request->about_me,
-            'status' => $request->status,
-            'is_active' => $request->is_active ?? $specialist->is_active,
-            'city_id' => $request->city_id,
-            'gov_id' => $request->gov_id,
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'email' => "required|email|unique:specialists,email,$id",
+            'languages' => 'nullable|array',
+            'languages.*' => 'nullable|exists:languages,id',
+            'experiences' => 'nullable|array',
+            'experiences.*.id' => 'nullable|exists:experiences,id',
+            'experiences.*.name' => 'nullable|string',
+            'experiences.*.job' => 'nullable|string',
+            'experiences.*.start_date' => 'nullable|date',
+            'experiences.*.end_date' => 'nullable|date',
+            'certificates' => 'nullable|array',
+            'certificates.*.id' => 'nullable|exists:certificates,id',
+            'certificates.*.name' => 'nullable|string',
+            'certificates.*.body' => 'nullable|string',
+            'skills' => 'nullable|array',
+            'skills.*.id' => 'nullable|exists:skill_specialists,id',
+            'skills.*.name' => 'nullable|string',
+            'skills.*.cyp' => 'nullable|string',
         ]);
 
-        // Update languages
-        if ($request->languages) {
-            LanguageSpecialist::where('specialist_id', $specialist->id)->delete();
-            foreach ($request->languages as $language_id) {
-                LanguageSpecialist::create([
-                    'specialist_id' => $specialist->id,
-                    'language_id' => $language_id,
-                ]);
-            }
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
-        // Update experiences
-        if ($request->experiences) {
-            foreach ($request->experiences as $experience) {
-                if (isset($experience['id'])) {
-                    Experience::find($experience['id'])->update($experience);
-                } else {
-                    Experience::create(array_merge($experience, ['specialist_id' => $specialist->id]));
+        DB::beginTransaction();
+
+        try {
+            $specialist = Specialist::findOrFail($id);
+
+            if ($request->hasFile('image')) {
+                $photo = $request->file('image');
+                $ext = $photo->getClientOriginalName();
+                $name = "spec-" . uniqid() . ".$ext";
+                $photo->move(public_path('specialist_images/'), $name);
+                $specialist->image = $name;
+            }
+
+            $specialist->update([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'rate' => $request->rate ?? $specialist->rate,
+                'yxp' => $request->exp_years ?? $specialist->yxp,
+                'price' => $request->price ?? $specialist->price,
+                'about_me' => $request->about_me,
+                'status' => $request->status,
+                'is_active' => $request->is_active ?? $specialist->is_active,
+                'city_id' => $request->city_id,
+                'gov_id' => $request->gov_id,
+            ]);
+
+            // Update languages
+            if ($request->languages) {
+                LanguageSpecialist::where('specialist_id', $specialist->id)->delete();
+                foreach ($request->languages as $language_id) {
+                    LanguageSpecialist::create([
+                        'specialist_id' => $specialist->id,
+                        'language_id' => $language_id,
+                    ]);
                 }
             }
-        }
 
-        // Update certificates
-        if ($request->certificates) {
-            foreach ($request->certificates as $certificate) {
-                if (isset($certificate['id'])) {
-                    Certificates::find($certificate['id'])->update($certificate);
-                } else {
-                    Certificates::create(array_merge($certificate, ['specialist_id' => $specialist->id]));
+            // Update experiences
+            if ($request->experiences) {
+                foreach ($request->experiences as $experience) {
+                    if (isset($experience['id'])) {
+                        Experience::find($experience['id'])->update($experience);
+                    } else {
+                        Experience::create(array_merge($experience, ['specialist_id' => $specialist->id]));
+                    }
                 }
             }
-        }
 
-        // Update skills
-        if ($request->skills) {
-            foreach ($request->skills as $skill) {
-                if (isset($skill['id'])) {
-                    SkillSpecialist::find($skill['id'])->update($skill);
-                } else {
-                    SkillSpecialist::create(array_merge($skill, ['specialist_id' => $specialist->id]));
+            // Update certificates
+            if ($request->certificates) {
+                foreach ($request->certificates as $certificate) {
+                    if (isset($certificate['id'])) {
+                        Certificates::find($certificate['id'])->update($certificate);
+                    } else {
+                        Certificates::create(array_merge($certificate, ['specialist_id' => $specialist->id]));
+                    }
                 }
             }
-        }
 
-        // Update specializations
-        if ($request->specializations) {
-            SpecialistSpecial::where('specialist_id', $specialist->id)->delete();
-            foreach ($request->specializations as $specialization) {
-                SpecialistSpecial::create(array_merge($specialization, ['specialist_id' => $specialist->id]));
+            // Update skills
+            if ($request->skills) {
+                foreach ($request->skills as $skill) {
+                    if (isset($skill['id'])) {
+                        SkillSpecialist::find($skill['id'])->update($skill);
+                    } else {
+                        SkillSpecialist::create(array_merge($skill, ['specialist_id' => $specialist->id]));
+                    }
+                }
             }
+
+            // Update specializations
+            if ($request->specializations) {
+                SpecialistSpecial::where('specialist_id', $specialist->id)->delete();
+                foreach ($request->specializations as $specialization) {
+                    SpecialistSpecial::create(array_merge($specialization, ['specialist_id' => $specialist->id]));
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Specialist updated successfully',
+                'data' => $specialist,
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Failed to update specialist',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        DB::commit();
-
-        return response()->json([
-            'message' => 'Specialist updated successfully',
-            'data' => $specialist,
-        ], 200);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'message' => 'Failed to update specialist',
-            'error' => $e->getMessage(),
-        ], 500);
     }
-}
-
 }
