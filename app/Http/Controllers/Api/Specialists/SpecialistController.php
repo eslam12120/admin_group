@@ -13,6 +13,7 @@ use App\Models\Government;
 use App\Models\Specialist;
 use App\Models\OrderNormal;
 use App\Models\Certificates;
+use App\Models\OrderService;
 use Illuminate\Http\Request;
 use App\Models\SkillSpecialist;
 use App\Models\SpecialistSpecial;
@@ -377,12 +378,15 @@ class SpecialistController extends Controller
         $orders = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
         $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
         $normal_order = OrderNormal::with(['user'])->whereIn('id', $data->pluck('order_id'))->get();
+        $service_orders = OrderService::with(['user','service_special' => function ($q) {
+            $q->select('id', 'name_' . app()->getLocale() . ' as name');
+        },])->get();
         return Response::json(array(
             'status' => 200,
             'message' => 'true',
-            'data' => $orders,
+            'orders' => $orders,
             'normal_orders' => $normal_order,
-
+             'service_orders'=> $service_orders
         ));
     }
     public function getSpecialistData()
