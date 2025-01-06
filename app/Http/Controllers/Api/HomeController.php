@@ -480,7 +480,7 @@ class HomeController extends Controller
             }
         }
         $order = OrderService::create([
-            'status' => 'pending',
+            'status' => 'active',
             'type_payment' => $request->type_payment,
             'desc' => $request->desc,
             'address' => $request->address,
