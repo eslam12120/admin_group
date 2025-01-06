@@ -19,24 +19,7 @@ class HomeSpecialistController extends Controller
     //
     public function getdata()
     {
-        $data=OrderService::where('status','pending')->with(
-            [
-                'service_special' => function ($q) {
-                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
-                }])->get();
-        $data->map(function ($data) {
-
-            $data['files'] = OrderFile::where('order_id', $data['id'])->get();
-        });
-        return Response::json(array(
-            'status' => 200,
-            'message' => 'true',
-            'data' => $data,
-        ));
-    }
-    public function get_data_by_id(Request $request)
-    {
-        $data = OrderService::where('id',$request->id)->with(
+        $data = OrderService::where('status', 'active')->with(
             [
                 'service_special' => function ($q) {
                     $q->select('id', 'name_' . app()->getLocale() . ' as name');
@@ -52,8 +35,25 @@ class HomeSpecialistController extends Controller
             'message' => 'true',
             'data' => $data,
         ));
+    }
+    public function get_data_by_id(Request $request)
+    {
+        $data = OrderService::where('id', $request->id)->with(
+            [
+                'service_special' => function ($q) {
+                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                }
+            ]
+        )->get();
+        $data->map(function ($data) {
 
-
+            $data['files'] = OrderFile::where('order_id', $data['id'])->get();
+        });
+        return Response::json(array(
+            'status' => 200,
+            'message' => 'true',
+            'data' => $data,
+        ));
     }
     public function add_negotation(Request $request)
     {
@@ -66,7 +66,7 @@ class HomeSpecialistController extends Controller
             'status' => 'nullable|string|max:255',
         ], [
             'order_id.required' => trans('auth.email.register'),
-           
+
         ]);
 
         if ($validator->fails()) {
@@ -83,23 +83,24 @@ class HomeSpecialistController extends Controller
             'price' => $request->price,
             'status' => $request->status,
         ]);
-
+        OrderService::where('id', $request->order_id)->update([
+            'status' => 'pending'
+        ]);
         return Response::json(array(
             'status' => 200,
             'message' => 'created successfully',
-          
+
         ));
     }
     public function get_all_schadule_orders()
     {
-        $data = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status','schadule')->get();
+        $data = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'schadule')->get();
         return Response::json(array(
             'status' => 200,
-            'data' =>$data,
+            'data' => $data,
 
 
         ));
-        
     }
     public function get_all_finished_orders()
     {
@@ -119,6 +120,14 @@ class HomeSpecialistController extends Controller
             'data' => $data,
 
 
+        ));
+    }
+    public function get_all_pending_service_orders()
+    {
+        $data = OrderService::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'pending')->get();
+        return Response::json(array(
+            'status' => 200,
+            'data' => $data,
         ));
     }
 
@@ -159,10 +168,9 @@ class HomeSpecialistController extends Controller
         $normal_order = OrderNormal::with(['user', 'coupon'])->whereIn('id', $data->pluck('order_id'))->where('status', 'cancelled')->get();
         return Response::json(array(
             'status' => 200,
-            'data' =>$normal_order,
+            'data' => $normal_order,
 
 
         ));
     }
-
 }

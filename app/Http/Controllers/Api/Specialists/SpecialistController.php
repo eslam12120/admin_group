@@ -378,7 +378,7 @@ class SpecialistController extends Controller
         $orders = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status','pending')->get();
         $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status','pending')->get();
         $normal_order = OrderNormal::with(['user'])->whereIn('id', $data->pluck('order_id'))->where('status','pending')->get();
-        $service_orders = OrderService::with(['user','service_special' => function ($q) {
+        $service_orders = OrderService::where('status','active')->with(['user','service_special' => function ($q) {
             $q->select('id', 'name_' . app()->getLocale() . ' as name');
         },])->get();
         return Response::json(array(

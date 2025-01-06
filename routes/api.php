@@ -74,6 +74,8 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
 
         Route::post('/orders/normal', [HomeController::class, 'add_order_normal'])->name('orders.normal.add');
 
+        Route::post('specialist/service/orders/finished', [OrderController::class, 'service_order_finished']);
+        Route::post('specialist/service/orders/cancelled', [OrderController::class, 'service_order_cancelled']);
         // Route for adding a service order
         Route::post('/orders/service', [HomeController::class, 'add_order_service'])->name('orders.service.add');
 
@@ -115,8 +117,6 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::post('specialist/orders/cancelled', [OrdersSpecialistController::class, 'order_cancelled']);
         Route::post('specialist/normal/orders/finished', [OrdersSpecialistController::class, 'normal_order_finished']);
         Route::post('specialist/normal/orders/cancelled', [OrdersSpecialistController::class, 'normal_order_cancelled']);
-        Route::post('specialist/service/orders/finished', [OrdersSpecialistController::class, 'service_order_finished']);
-        Route::post('specialist/service/orders/cancelled', [OrdersSpecialistController::class, 'service_order_cancelled']);
         Route::post('specialist/activate/account', [SpecialistController::class, 'activate_account']);
         Route::post('specialist/unactivate/account', [SpecialistController::class, 'unactivate_account']);
         Route::get('specialist/get/all/finished/orders', [HomeSpecialistController::class, 'get_all_finished_orders']);
@@ -127,6 +127,7 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('specialist/get/all/finished/normal/orders', [HomeSpecialistController::class, 'get_all_finished_normal_orders']);
         Route::get('specialist/get/all/cancelled/normal/orders', [HomeSpecialistController::class, 'get_all_cancelled_normal_orders']);
         Route::post('specialist/edit/{id}', [SpecialistController::class, 'edit'])->name('specialists.edit');
+        Route::get('specialist/get/all/active/service/orders', [HomeSpecialistController::class, ' get_all_pending_service_orders']);
     });
 });
 Route::post('admin/login', [AuthAdminController::class, 'login']);
