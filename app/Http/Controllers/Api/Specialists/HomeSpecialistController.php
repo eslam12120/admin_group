@@ -68,12 +68,9 @@ class HomeSpecialistController extends Controller
             'order_id.required' => trans('auth.email.register'),
 
         ]);
-
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
-
-
         // Create the order using the validated data
         Negotation::create([
             'order_id' => $request->order_id,
@@ -82,9 +79,6 @@ class HomeSpecialistController extends Controller
             'time' => $request->time,
             'price' => $request->price,
             'status' => $request->status,
-        ]);
-        OrderService::where('id', $request->order_id)->update([
-            'status' => 'pending'
         ]);
         return Response::json(array(
             'status' => 200,
