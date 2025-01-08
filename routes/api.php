@@ -15,6 +15,7 @@ use App\Http\Controllers\AdminApi\AdminCrudController;
 use App\Http\Controllers\AdminApi\AuthAdminController;
 use App\Http\Controllers\AdminApi\EducationController;
 use App\Http\Controllers\AdminApi\GovernmentController;
+use App\Http\Controllers\AdminApi\AdminOrdersController;
 use App\Http\Controllers\Api\Users\EditProfileController;
 use App\Http\Controllers\Api\Users\ResetPasswordController;
 use App\Http\Controllers\Api\Users\ForgotPasswordController;
@@ -159,4 +160,10 @@ Route::group(['middleware' => 'checkAdmin:admin-api'], function () {
     Route::resource('admin/governments', GovernmentController::class);
     Route::resource('admin/educations', EducationController::class);
     Route::resource('admin/cities', CityController::class);
+
+
+    Route::get('admin/orders', [AdminOrdersController::class, 'orders']);
+    Route::get('admin/normal', [AdminOrdersController::class, 'normal']);
+    Route::get('admin/order_service', [AdminOrdersController::class, 'order_service']);
+    Route::get('admin/counts', [AdminOrdersController::class, 'counts']);
 });
