@@ -88,7 +88,7 @@ class HomeSpecialistController extends Controller
     }
     public function get_all_schadule_orders()
     {
-        $data = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'schadule')->get();
+        $data = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'schedule')->get();
         return Response::json(array(
             'status' => 200,
             'data' => $data,
@@ -98,7 +98,7 @@ class HomeSpecialistController extends Controller
     }
     public function get_all_finished_orders()
     {
-        $data = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
+        $data = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
         return Response::json(array(
             'status' => 200,
             'data' => $data,
@@ -108,7 +108,7 @@ class HomeSpecialistController extends Controller
     }
     public function get_all_cancelled_orders()
     {
-        $data = Order::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
+        $data = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
         return Response::json(array(
             'status' => 200,
             'data' => $data,
@@ -116,9 +116,22 @@ class HomeSpecialistController extends Controller
 
         ));
     }
-    public function get_all_pending_service_orders()
+     public function get_all_pending_service_orders()
     {
-        $data = OrderService::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'pending')->get();
+        $data = OrderService::with(['user','orderfiles'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'pending')->get();
+        $data->transform(function ($order) {
+            $order->audio_path_url = asset('uploads/files/' . $order->audio_path);
+            if ($order->specialist) {
+                $order->specialist->image_url = asset('specialist_images/' .  $order->specialist->image);
+            }
+            $order->orderfiles->transform(function ($file) {
+                if ($file->file_path) {
+                    $file->file_url = asset('uploads/files/' . $file->file_path);
+                }
+                return $file;
+            });
+            return $order;
+        });
         return Response::json(array(
             'status' => 200,
             'data' => $data,
@@ -127,7 +140,7 @@ class HomeSpecialistController extends Controller
 
     public function get_all_finished_service_orders()
     {
-        $data = OrderService::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
+        $data = OrderService::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
         return Response::json(array(
             'status' => 200,
             'data' => $data,
@@ -137,7 +150,7 @@ class HomeSpecialistController extends Controller
     }
     public function get_all_cancelled_service_orders()
     {
-        $data = OrderService::with(['user', 'coupon'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
+        $data = OrderService::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
         return Response::json(array(
             'status' => 200,
             'data' => $data,
@@ -148,7 +161,7 @@ class HomeSpecialistController extends Controller
     public function get_all_finished_normal_orders()
     {
         $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
-        $normal_order = OrderNormal::with(['user', 'coupon'])->whereIn('id', $data->pluck('order_id'))->where('status', 'finished')->get();
+        $normal_order = OrderNormal::with(['user'])->whereIn('id', $data->pluck('order_id'))->where('status', 'finished')->get();
         return Response::json(array(
             'status' => 200,
             'data' => $normal_order,
@@ -159,7 +172,7 @@ class HomeSpecialistController extends Controller
     public function get_all_cancelled_normal_orders()
     {
         $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
-        $normal_order = OrderNormal::with(['user', 'coupon'])->whereIn('id', $data->pluck('order_id'))->where('status', 'cancelled')->get();
+        $normal_order = OrderNormal::with(['user'])->whereIn('id', $data->pluck('order_id'))->where('status', 'cancelled')->get();
         return Response::json(array(
             'status' => 200,
             'data' => $normal_order,
