@@ -94,6 +94,7 @@ class HomeSpecialistController extends Controller
             if ($order->user) {
                 $order->user->image_url = asset('images/users/' . $order->user->image);
             }
+            return $order;
         });
 
         return Response::json([
@@ -110,6 +111,7 @@ class HomeSpecialistController extends Controller
             if ($order->user) {
                 $order->user->image_url = asset('images/users/' . $order->user->image);
             }
+            return $order;
         });
 
         return Response::json([
@@ -126,6 +128,7 @@ class HomeSpecialistController extends Controller
             if ($order->user) {
                 $order->user->image_url = asset('images/users/' . $order->user->image);
             }
+            return $order;
         });
 
         return Response::json([
@@ -169,6 +172,7 @@ class HomeSpecialistController extends Controller
             if ($order->user) {
                 $order->user->image_url = asset('images/users/' . $order->user->image);
             }
+            return $order;
         });
 
         return Response::json([
@@ -185,6 +189,7 @@ class HomeSpecialistController extends Controller
             if ($order->user) {
                 $order->user->image_url = asset('images/users/' . $order->user->image);
             }
+            return $order;
         });
 
         return Response::json([
