@@ -391,7 +391,12 @@ class SpecialistController extends Controller
 
         // Get pending normal orders
         $normalOrderData = OrderNormalSpecialist::where('specialist_id', $specialistId)->get();
-        $normalOrders = OrderNormal::with(['user', 'specialist.special_order'])
+        $normalOrders = OrderNormal::with([
+            'user',
+            'special_order' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            },
+        ])
             ->whereIn('id', $normalOrderData->pluck('order_id'))
             ->where('status', 'pending')
             ->get();
