@@ -22,8 +22,8 @@ class OrderNormal extends Model
         return $this->hasMany(OrderFile::class, 'order_id')
             ->where('type', 'normal'); // Filtering by type 'services' // Assuming the foreign key is user_id in orders table
     }
-    
-  
+
+
     /**
      * العلاقة مع القسيمة (Coupon)
      */
@@ -31,5 +31,8 @@ class OrderNormal extends Model
     {
         return $this->belongsTo(coupoun::class); // Assuming the foreign key is coupon_id in orders table
     }
-
+    public function special_order()
+    {
+        return $this->belongsTo(Special::class);
+    }
 }
