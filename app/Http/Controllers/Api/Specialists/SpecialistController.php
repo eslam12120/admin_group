@@ -378,7 +378,9 @@ class SpecialistController extends Controller
         $specialistId = Auth::guard('specialist-api')->user()->id;
 
         // Get pending orders
-        $orders = Order::with(['user', 'special_order'])
+        $orders = Order::with(['user', 'special_order' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            }])
             ->where('specialist_id', $specialistId)
             ->where('status', 'pending')
             ->get();
@@ -424,8 +426,8 @@ class SpecialistController extends Controller
             ])->get();
         $serviceOrders->transform(function ($order) {
             $order->audio_path_url = asset('uploads/files/' . $order->audio_path);
-            if ($order->specialist) {
-                $order->specialist->image_url = asset('specialist_images/' . $order->specialist->image);
+            if ($order->user) {
+                $order->user->image_url = asset('images/users/' . $order->user->image);
             }
             $order->orderfiles->transform(function ($file) {
                 if ($file->file_path) {
