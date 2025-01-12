@@ -166,12 +166,24 @@ class HomeSpecialistController extends Controller
 
     public function get_all_finished_service_orders()
     {
-        $data = OrderService::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
+        $data = OrderService::with([
+            'user',
+            'service_special' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            }
+        ])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
 
         $data->transform(function ($order) {
             if ($order->user) {
                 $order->user->image_url = asset('images/users/' . $order->user->image);
             }
+            $order->audio_path_url = asset('uploads/files/' . $order->audio_path);
+            $order->orderfiles->transform(function ($file) {
+                if ($file->file_path) {
+                    $file->file_url = asset('uploads/files/' . $file->file_path);
+                }
+                return $file;
+            });
             return $order;
         });
 
@@ -183,12 +195,24 @@ class HomeSpecialistController extends Controller
 
     public function get_all_cancelled_service_orders()
     {
-        $data = OrderService::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
+        $data = OrderService::with([
+            'user',
+            'service_special' => function ($q) {
+                $q->select('id', 'name_' . app()->getLocale() . ' as name');
+            }
+        ])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
 
         $data->transform(function ($order) {
             if ($order->user) {
                 $order->user->image_url = asset('images/users/' . $order->user->image);
             }
+            $order->audio_path_url = asset('uploads/files/' . $order->audio_path);
+            $order->orderfiles->transform(function ($file) {
+                if ($file->file_path) {
+                    $file->file_url = asset('uploads/files/' . $file->file_path);
+                }
+                return $file;
+            });
             return $order;
         });
 
