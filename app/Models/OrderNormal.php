@@ -33,6 +33,6 @@ class OrderNormal extends Model
     }
     public function special_order()
     {
-        return $this->belongsTo(Special::class);
+        return $this->belongsTo(Special::class, 'special_id');
     }
 }

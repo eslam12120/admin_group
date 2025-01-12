@@ -378,7 +378,7 @@ class SpecialistController extends Controller
         $specialistId = Auth::guard('specialist-api')->user()->id;
 
         // Get pending orders
-        $orders = Order::with(['user', 'specialist.special_order'])
+        $orders = Order::with(['user', 'special_order'])
             ->where('specialist_id', $specialistId)
             ->where('status', 'pending')
             ->get();

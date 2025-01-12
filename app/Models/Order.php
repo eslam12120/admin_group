@@ -26,4 +26,8 @@ class Order extends Model
     {
         return $this->belongsTo(coupoun::class); // Assuming the foreign key is coupon_id in orders table
     }
+    public function special_order()
+    {
+        return $this->belongsTo(Special::class, 'special_id');
+    }
 }
