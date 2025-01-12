@@ -105,7 +105,7 @@ class AdminOrdersController extends Controller
     // Count online specialists and map image URLs
     $specialists_online = Specialist::where('status', '1')
         ->where('is_active', '1')
-        ->select('id', 'image')
+        ->select('id', 'image','name')
         ->get()
         ->map(function ($specialist) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);

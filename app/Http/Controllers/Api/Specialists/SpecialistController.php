@@ -375,16 +375,52 @@ class SpecialistController extends Controller
     }
     public function get_all_orders_for_user(Request $request)
     {
-        $orders = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'pending')->get();
-        $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
-        $normal_order = OrderNormal::with(['user'])->whereIn('id', $data->pluck('order_id'))->where('status', 'pending')->get();
-        $service_orders = OrderService::where('status', 'active')->with(['user', 'service_special' => function ($q) {
-            $q->select('id', 'name_' . app()->getLocale() . ' as name');
-        },])->get();
-        $service_orders->transform(function ($order) {
+        $specialistId = Auth::guard('specialist-api')->user()->id;
+
+        // Get pending orders
+        $orders = Order::with(['user', 'specialist.special_order'])
+            ->where('specialist_id', $specialistId)
+            ->where('status', 'pending')
+            ->get();
+        $orders->transform(function ($order) {
+            if ($order->user) {
+                $order->user->image_url = asset('images/users/' . $order->user->image);
+            }
+            return $order;
+        });
+
+        // Get pending normal orders
+        $normalOrderData = OrderNormalSpecialist::where('specialist_id', $specialistId)->get();
+        $normalOrders = OrderNormal::with(['user', 'specialist.special_order'])
+            ->whereIn('id', $normalOrderData->pluck('order_id'))
+            ->where('status', 'pending')
+            ->get();
+        $normalOrders->transform(function ($order) {
+            if ($order->user) {
+                $order->user->image_url = asset('images/users/' . $order->user->image);
+            }
+            $order->audio_path_url = asset('uploads/files/' . $order->audio_path);
+            $order->orderfiles->transform(function ($file) {
+                if ($file->file_path) {
+                    $file->file_url = asset('uploads/files/' . $file->file_path);
+                }
+                return $file;
+            });
+            return $order;
+        });
+
+        // Get active service orders
+        $serviceOrders = OrderService::where('status', 'active')
+            ->with([
+                'user',
+                'service_special' => function ($q) {
+                    $q->select('id', 'name_' . app()->getLocale() . ' as name');
+                },
+            ])->get();
+        $serviceOrders->transform(function ($order) {
             $order->audio_path_url = asset('uploads/files/' . $order->audio_path);
             if ($order->specialist) {
-                $order->specialist->image_url = asset('specialist_images/' .  $order->specialist->image);
+                $order->specialist->image_url = asset('specialist_images/' . $order->specialist->image);
             }
             $order->orderfiles->transform(function ($file) {
                 if ($file->file_path) {
@@ -394,14 +430,17 @@ class SpecialistController extends Controller
             });
             return $order;
         });
-        return Response::json(array(
+
+        // Return the response
+        return Response::json([
             'status' => 200,
             'message' => 'true',
             'orders' => $orders,
-            'normal_orders' => $normal_order,
-            'service_orders' => $service_orders
-        ));
+            'normal_orders' => $normalOrders,
+            'service_orders' => $serviceOrders,
+        ]);
     }
+
     public function getSpecialistData()
     {
         // Fetch specialist data based on ID, including city and government relations
