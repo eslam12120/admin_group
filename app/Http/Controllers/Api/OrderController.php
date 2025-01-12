@@ -116,11 +116,8 @@ class OrderController extends Controller
     }
     public function service_order_finished(Request $request)
     {
-
         $orders = OrderService::where('id', $request->order_id)->Update([
-            'specialist_id' => Auth::guard('user-api')->user()->id,
             'status' => 'finished ',
-
         ]);
 
         return Response::json(array(
@@ -134,9 +131,7 @@ class OrderController extends Controller
     {
 
         $orders = OrderService::where('id', $request->order_id)->Update([
-            'specialist_id' => Auth::guard('user-api')->user()->id,
             'status' => 'cancelled',
-
         ]);
         RejectionReason::create([
             'order_id' => $request->order_id,
