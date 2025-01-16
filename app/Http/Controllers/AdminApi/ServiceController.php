@@ -80,7 +80,7 @@ class ServiceController extends Controller
         ]);
 
         // Find the service by ID
-        $service = Service::findOrFail($id);
+        $service = Service::where('id', $id)->first();
 
         if ($request->hasFile('image')) {
             $photo = $request->file('image');
