@@ -51,5 +51,8 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
-
+    public function normal_orders()
+    {
+        return $this->hasMany(OrderNormal::class)->limit(10);; // Filtering by type 'services' // Assuming the foreign key is user_id in orders table
+    }
 }

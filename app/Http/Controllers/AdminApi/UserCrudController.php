@@ -28,7 +28,7 @@ class UserCrudController extends Controller
 
     public function show($id)
     {
-        $user = User::where('id', $id)->first();
+        $user = User::where('id', $id)->with('normal_orders')->first();
         if ($user) {
             $user->image_url = asset('images/users/' . $user->image);
         } else {

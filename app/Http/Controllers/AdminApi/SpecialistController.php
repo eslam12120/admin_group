@@ -6,6 +6,7 @@ use App\Models\Rate;
 use App\Models\Order;
 use App\Models\Experience;
 use App\Models\Specialist;
+use App\Models\OrderNormal;
 use App\Models\Certificates;
 use App\Models\OrderService;
 use Illuminate\Http\Request;
@@ -47,7 +48,7 @@ class SpecialistController extends Controller
                 'government' => function ($q) {
                     $q->select('id', 'name_' . app()->getLocale() . ' as name');
                 },
-            ])
+            ])->with('orderNormalSpecialists')
             ->first();
 
         // Check if the specialist exists
@@ -58,7 +59,8 @@ class SpecialistController extends Controller
                 'data' => null,
             ]);
         }
-
+        $orderIds = $specialist->orderNormalSpecialists->pluck('order_id');
+        $services = OrderNormal::whereIn('id', $orderIds)->take(10)->latest()->get();
         // Add additional data to the specialist
         $specialist['specials'] = SpecialistSpecial::where('specialist_id', $specialist['id'])
             ->select('id', 'specialist_id', 'special_id')
@@ -96,6 +98,7 @@ class SpecialistController extends Controller
         return response()->json([
             'message' => 'Specialist retrieved successfully',
             'data' => $specialist,
+            'services'=>$services
         ], 200);
     }
 
