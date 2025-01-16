@@ -155,7 +155,7 @@ Route::group(['middleware' => 'checkAdmin:admin-api'], function () {
 
     // Resource Controllers
     Route::resource('admin/specials', SpecialController::class);
-    Route::post('admin/update/specials/{id}', [ServiceController::class,'update_specials']);
+    Route::post('admin/update/specials/{id}', [SpecialController::class,'update_specials']);
     Route::resource('admin/services', ServiceController::class);
     Route::post('admin/update/services/{id}', [ServiceController::class, 'update_service']);
     Route::resource('admin/languages', LanguageController::class);
