@@ -38,7 +38,11 @@ class HomeController extends Controller
             return $specialist;
         });
         $nameColumn = $lang === 'ar' ? 'name_ar' : 'name_en';
-        $services = Service::select('id', $nameColumn . ' as name', 'image', 'description_' . $lang . ' as description')->where('active', '1')->get();
+        $services = Service::select('id', $nameColumn . ' as name', 'image', 'description_' . $lang . ' as description')->where('active', '1')->get()->map(function ($service) {
+            // Set only image_url
+            $service->image_url = asset('images/services/' .  $service->image);
+            return $service;
+        });
         $best_specialists = Specialist::with([
             'city' => function ($q) use ($lang) {
                 $q->select('id', 'name_' . $lang . ' as name');
