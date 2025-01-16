@@ -70,7 +70,7 @@ class ServiceController extends Controller
     }
 
     // Update
-    public function update(Request $request, $id)
+    public function update_service(Request $request, $id)
     {
         $request->validate([
             'name_ar' => 'required|string|max:255',
