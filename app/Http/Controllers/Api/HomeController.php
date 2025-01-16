@@ -38,7 +38,7 @@ class HomeController extends Controller
             return $specialist;
         });
         $nameColumn = $lang === 'ar' ? 'name_ar' : 'name_en';
-        $services = Service::select('id', $nameColumn . ' as name', 'image')->where('active', '1')->get();
+        $services = Service::select('id', $nameColumn . ' as name', 'image', 'description_' . $lang . ' as description')->where('active', '1')->get();
         $best_specialists = Specialist::with([
             'city' => function ($q) use ($lang) {
                 $q->select('id', 'name_' . $lang . ' as name');
@@ -71,7 +71,7 @@ class HomeController extends Controller
             $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')->where('specialist_id', $specialist->id)->get();
             return $specialist;
         });
-        $services = Service::select('id', $nameColumn . ' as name', 'image')->where('name_ar', 'LIKE', '%' . $request->search . '%')->where('active', '1')->orWhere('active', '1')->where('name_en', 'LIKE', '%' . $request->search . '%')->get();
+        $services = Service::select('id', $nameColumn . ' as name', 'image', 'description_' . $lang . ' as description')->where('name_ar', 'LIKE', '%' . $request->search . '%')->where('active', '1')->orWhere('active', '1')->where('name_en', 'LIKE', '%' . $request->search . '%')->get();
         return response()->json([
             'message' => 'success',
             'services' =>  $services,
@@ -83,7 +83,7 @@ class HomeController extends Controller
     {
         $lang = $request->lang;
         $nameColumn = $lang === 'ar' ? 'name_ar' : 'name_en';
-        $specials = Special::select('id', $nameColumn . ' as name', 'image', 'job_name_' . $lang . ' as job_name')->where('active', '1')->get()->map(function ($special) use ($lang) {
+        $specials = Special::select('id', $nameColumn . ' as name', 'image', 'job_name_' . $lang . ' as job_name', 'description_' . $lang . ' as description')->where('active', '1')->get()->map(function ($special) use ($lang) {
             $special->image_url = asset('special_images/' . $special->image);
             return $special;
         });
