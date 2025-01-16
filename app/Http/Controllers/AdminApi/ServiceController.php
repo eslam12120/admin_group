@@ -105,6 +105,8 @@ class ServiceController extends Controller
         // Update other fields
         $service->name_ar = $request->name_ar;
         $service->name_en = $request->name_en;
+        $service->description_ar = $request->description_ar;
+        $service->description_en = $request->description_en;
         $service->active = $request->active;
 
         // Save the changes
