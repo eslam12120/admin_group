@@ -72,7 +72,7 @@ class SpecialController extends Controller
         ], 200);
     }
 
-    public function update(Request $request, $id)
+    public function update_specials(Request $request, $id)
     {
         $special = Special::find($id);
 
