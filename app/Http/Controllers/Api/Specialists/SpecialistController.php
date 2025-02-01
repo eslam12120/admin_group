@@ -26,6 +26,8 @@ use App\Models\OrderNormalSpecialist;
 use App\Models\SpecialistVerification;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use App\Mail\OtpCode;
+use Illuminate\Support\Facades\Mail;
 
 class SpecialistController extends Controller
 {
@@ -266,6 +268,7 @@ class SpecialistController extends Controller
                     'specialist_id' => $user->id,
                     'code' => $code,
                 ]);
+                 Mail::to($request->email)->send(new OtpCode($code));
                 DB::commit();
                 $token = null;
                 return $this->respondWithToken_otp($token, $code, $user->id);

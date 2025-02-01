@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\OtpCode;
 
 class ForgotPasswordController extends Controller
 {
@@ -45,7 +46,7 @@ class ForgotPasswordController extends Controller
 
         //  $code=$codeData->code;
         // Send email to user
-        // Mail::to($request->email)->send(new SendCodeResetPassword($code));
+        Mail::to($request->email)->send(new OtpCode($code));
 
 
         return response(['message' => trans('passwords.sent'), 'code' => $code], 200);
