@@ -26,6 +26,8 @@ use App\Models\OrderNormalSpecialist;
 use App\Models\SpecialistVerification;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use App\Mail\OtpCode;
+use Illuminate\Support\Facades\Mail;
 
 class SpecialistController extends Controller
 {
@@ -266,6 +268,7 @@ class SpecialistController extends Controller
                     'specialist_id' => $user->id,
                     'code' => $code,
                 ]);
+                 Mail::to($request->email)->send(new OtpCode($code));
                 DB::commit();
                 $token = null;
                 return $this->respondWithToken_otp($token, $code, $user->id);
@@ -602,46 +605,36 @@ class SpecialistController extends Controller
                 }
             }
 
-            // Update experiences
-            if ($request->experiences) {
-                foreach ($request->experiences as $experience) {
-                    if (isset($experience['id'])) {
-                        Experience::find($experience['id'])->update($experience);
-                    } else {
-                        Experience::create(array_merge($experience, ['specialist_id' => $specialist->id]));
-                    }
-                }
-            }
+         if ($request->experiences) {
+    Experience::where('specialist_id', $specialist->id)->delete(); // Delete all old experiences
+    foreach ($request->experiences as $experience) {
+        Experience::create(array_merge($experience, ['specialist_id' => $specialist->id])); // Create new experiences
+    }
+}
 
-            // Update certificates
-            if ($request->certificates) {
-                foreach ($request->certificates as $certificate) {
-                    if (isset($certificate['id'])) {
-                        Certificates::find($certificate['id'])->update($certificate);
-                    } else {
-                        Certificates::create(array_merge($certificate, ['specialist_id' => $specialist->id]));
-                    }
-                }
-            }
+// Update certificates
+if ($request->certificates) {
+    Certificates::where('specialist_id', $specialist->id)->delete(); // Delete all old certificates
+    foreach ($request->certificates as $certificate) {
+        Certificates::create(array_merge($certificate, ['specialist_id' => $specialist->id])); // Create new certificates
+    }
+}
 
-            // Update skills
-            if ($request->skills) {
-                foreach ($request->skills as $skill) {
-                    if (isset($skill['id'])) {
-                        SkillSpecialist::find($skill['id'])->update($skill);
-                    } else {
-                        SkillSpecialist::create(array_merge($skill, ['specialist_id' => $specialist->id]));
-                    }
-                }
-            }
+// Update skills
+if ($request->skills) {
+    SkillSpecialist::where('specialist_id', $specialist->id)->delete(); // Delete all old skills
+    foreach ($request->skills as $skill) {
+        SkillSpecialist::create(array_merge($skill, ['specialist_id' => $specialist->id])); // Create new skills
+    }
+}
 
-            // Update specializations
-            if ($request->specializations) {
-                SpecialistSpecial::where('specialist_id', $specialist->id)->delete();
-                foreach ($request->specializations as $specialization) {
-                    SpecialistSpecial::create(array_merge($specialization, ['specialist_id' => $specialist->id]));
-                }
-            }
+// Update specializations
+if ($request->specializations) {
+    SpecialistSpecial::where('specialist_id', $specialist->id)->delete(); // Delete all old specializations
+    foreach ($request->specializations as $specialization) {
+        SpecialistSpecial::create(array_merge($specialization, ['specialist_id' => $specialist->id])); // Create new specializations
+    }
+}
 
             DB::commit();
 

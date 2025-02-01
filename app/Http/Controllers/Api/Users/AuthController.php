@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OtpCode;
 
 class AuthController extends Controller
 {
@@ -58,8 +60,8 @@ class AuthController extends Controller
             ]);
 
 
-            // Send email to user
-            //    Mail::to($request->email)->send(new OtpCode($code));
+             //Send email to user
+                Mail::to($request->email)->send(new OtpCode($code));
 
             // return Response::json(array(
             //     'status'=>200,
@@ -127,7 +129,7 @@ class AuthController extends Controller
 
 
                 // Send email to user
-                //  Mail::to($request->email)->send(new OtpCode($code));
+                  Mail::to($request->email)->send(new OtpCode($code));
 
                 // return Response::json(array(
                 //     'status'=>200,

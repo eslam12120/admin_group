@@ -171,7 +171,7 @@ class HomeController extends Controller
             ->through(function ($specialist) use ($lang) {
                 $specialist->image_url = asset('specialist_images/' . $specialist->image);
                 $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')
+                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name','special_id')
                     ->where('specialist_id', $specialist->id)
                     ->get();
                 return $specialist;
@@ -222,7 +222,7 @@ class HomeController extends Controller
         $specialists = $query->paginate(30)->through(function ($specialist) use ($lang) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
             $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')
+            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name','special_id')
                 ->where('specialist_id', $specialist->id)
                 ->get();
             return $specialist;
