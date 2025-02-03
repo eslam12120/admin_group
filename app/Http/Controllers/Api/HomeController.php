@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Rate;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Coupoun;
 use App\Models\Service;
 use App\Models\Special;
 use App\Models\OrderFile;
 use App\Models\Experience;
+use App\Models\Negotation;
 use App\Models\Specialist;
 use App\Models\OrderNormal;
 use App\Models\UserCoupoun;
@@ -22,10 +24,11 @@ use App\Models\SpecialistSpecial;
 use App\Models\LanguageSpecialist;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Negotation;
 use Illuminate\Support\Facades\Auth;
 use App\Models\OrderNormalSpecialist;
 use Illuminate\Support\Facades\Response;
+use App\Notifications\SavePushNotification;
+use App\Notifications\SavePushNotificationSpecialist;
 
 class HomeController extends Controller
 {
@@ -171,7 +174,7 @@ class HomeController extends Controller
             ->through(function ($specialist) use ($lang) {
                 $specialist->image_url = asset('specialist_images/' . $specialist->image);
                 $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name','special_id')
+                $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name', 'special_id')
                     ->where('specialist_id', $specialist->id)
                     ->get();
                 return $specialist;
@@ -222,7 +225,7 @@ class HomeController extends Controller
         $specialists = $query->paginate(30)->through(function ($specialist) use ($lang) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
             $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name','special_id')
+            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name', 'special_id')
                 ->where('specialist_id', $specialist->id)
                 ->get();
             return $specialist;
@@ -258,10 +261,104 @@ class HomeController extends Controller
                 'coupoun_id' => $request->coupoun_id,
             ]);
         }
+        try {
+            $this->send_notify_user(Auth::id());
+            $this->send_notify_provider($request->specialist_id);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Notification failed: ' . $e->getMessage());
+        }
         return response()->json([
             'message' => 'success',
             'data' => $order->id,
         ], 200);
+    }
+    public function send_notify_user($user_id)
+    {
+        $user = User::where('id', $user_id)->first();
+        if ($user) {
+            try {
+                $title = "طلب جديد";
+                $message = "تم اضافة طلبك بنجاح ";
+                $this->save_notify_place($title, $message,  $user_id);
+                if ($user->device_token) {
+                    (new SavePushNotification($title, $message))->toFirebase($user->device_token);
+                    return 1;
+                } else {
+                    return 0;
+                }
+            } catch (\Exception $e) {
+                return 2;
+            }
+        } else {
+            return 0;
+        }
+    }
+    public function send_notify_provider($provider_id)
+    {
+        $user = Specialist::where('id', $provider_id)->first();
+        if ($user) {
+            try {
+                $title = "طلب جديد";
+                $message = "تم استقبال  طلبك بنجاح ";
+                $this->save_notify_place($title, $message,  $provider_id);
+                if ($user->device_token) {
+                    (new SavePushNotificationSpecialist($title, $message))->toFirebase($user->device_token);
+                    return 1;
+                } else {
+                    return 0;
+                }
+            } catch (\Exception $e) {
+                return 2;
+            }
+        } else {
+            return 0;
+        }
+    }
+    public function send_notify_provider_stat($provider_id)
+    {
+        $user = Specialist::where('id', $provider_id)->first();
+        if ($user) {
+            try {
+                $title = "حالة الطلب  ";
+                $message = "تم تعديل حالة   طلبك  قم بمراجعتتها  ";
+                $this->save_notify_place($title, $message,  $provider_id);
+                if ($user->device_token) {
+                    (new SavePushNotificationSpecialist($title, $message))->toFirebase($user->device_token);
+                    return 1;
+                } else {
+                    return 0;
+                }
+            } catch (\Exception $e) {
+                return 2;
+            }
+        } else {
+            return 0;
+        }
+    }
+
+    public function save_notify_place($title, $message, $user_id)
+    {
+        Notification::create([
+            'title' => $title,
+            'message' => $message,
+            'receiver_id' => $user_id,
+            'specialist_id' => null,
+            'is_read' => '0',
+            'sender_id' => 0,
+        ]);
+        /*
+        DB::table('tbl_place_notification_orders')->insert([
+            'title' => $title,
+            'message' => $message,
+            'receiver_id' => $place_id,
+            'sender_type' => 'App\Models\User',
+            'is_read' => '0',
+            'sender_id' => $user_id,
+            'place_id' => $place_id
+        ]);
+        return 1;
+        */
+        return 1;
     }
     public function add_coupoun(Request $request)
     {
@@ -432,6 +529,14 @@ class HomeController extends Controller
                 ]);
             }
         }
+        try {
+            $this->send_notify_user(Auth::id());
+            foreach ($request->specialist_id as $specialistId) {
+                $this->send_notify_provider($specialistId);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Notification failed: ' . $e->getMessage());
+        }
         return response()->json([
             'message' => 'success',
             'data' => $order->id,
@@ -514,6 +619,15 @@ class HomeController extends Controller
                 ]);
             }
         }
+        try {
+            $specialists = Specialist::all();
+            $this->send_notify_user(Auth::id());
+            foreach ($specialists as $specialistId) {
+                $this->send_notify_provider($specialistId);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Notification failed: ' . $e->getMessage());
+        }
         return response()->json([
             'message' => 'success',
             'data' => $order->id,
@@ -543,15 +657,28 @@ class HomeController extends Controller
             'status' => 'pending',
             'specialist_id' => $specialist->specialist_id ?? null
         ]);
+        try {
+            //    $this->send_notify_user(Auth::id());
+            $this->send_notify_provider_stat($specialist->specialist_id);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Notification failed: ' . $e->getMessage());
+        }
         return response()->json([
             'message' => 'success'
         ], 200);
     }
     public function reject_offers(Request $request)
     {
+        $specialist = Negotation::where('id', $request->id)->first();
         Negotation::where('id', $request->id)->update([
             'status' => 'rejected',
         ]);
+        try {
+            //    $this->send_notify_user(Auth::id());
+            $this->send_notify_provider_stat($specialist->specialist_id);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Notification failed: ' . $e->getMessage());
+        }
         return response()->json([
             'message' => 'success'
         ], 200);
