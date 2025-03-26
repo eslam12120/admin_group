@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\AdminApi;
 
-use App\Models\Service;
+use App\Models\ServiceSpecial;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class ServiceController extends Controller
 {
-    /*
+    
     public function store(Request $request)
     {
         $request->validate([
             'name_ar' => 'required|string|max:255',
             'name_en' => 'required|string|max:255',
-            'image' => 'nullable|string',
+            'image' => 'nullable|file|mimes:jpeg,png,jpg,gif',
             'active' => 'nullable|integer',
         ]);
         if ($request->hasFile('image')) {
@@ -23,17 +23,23 @@ class ServiceController extends Controller
             $name = "ser-" . uniqid() . ".$ext";
             $photo->move(public_path('images/services'), $name);
             $imagePath = url("images/services/$name");
-            $service = Service::create([
+            $service = ServiceSpecial::create([
                 'name_ar' => $request->name_ar,
                 'name_en' => $request->name_en,
                 'image' => $imagePath,
                 'active' => $request->active,
+                'price' => $request->price,
+                'description_ar' => $request->description_ar,
+                'description_en' => $request->description_en,
             ]);
         } else {
-            $service = Service::create([
+            $service = ServiceSpecial::create([
                 'name_ar' => $request->name_ar,
                 'name_en' => $request->name_en,
                 'active' => $request->active,
+                'price' => $request->price,
+                'description_ar' => $request->description_ar,
+                'description_en' => $request->description_en,
             ]);
         }
 
@@ -43,11 +49,11 @@ class ServiceController extends Controller
             'data' => $service
         ], 200);
     }
-*/
+
     // Read (All)
     public function index()
     {
-        $services = Service::whereIn('active', ['1', '0'])->get();
+        $services = ServiceSpecial::whereIn('active', ['1', '0'])->get();
         return response()->json([
             'data' => $services
         ]);
@@ -56,7 +62,7 @@ class ServiceController extends Controller
     // Read (Single)
     public function show($id)
     {
-        $service = Service::find($id);
+        $service = ServiceSpecial::find($id);
 
         if (!$service) {
             return response()->json([
@@ -80,7 +86,7 @@ class ServiceController extends Controller
         ]);
 
         // Find the service by ID
-        $service = Service::where('id', $id)->first();
+        $service = ServiceSpecial::where('id', $id)->first();
 
         if ($request->hasFile('image')) {
             $photo = $request->file('image');
@@ -107,6 +113,7 @@ class ServiceController extends Controller
         $service->name_en = $request->name_en;
         $service->description_ar = $request->description_ar;
         $service->description_en = $request->description_en;
+         $service->price = $request->price;
         $service->active = $request->active;
 
         // Save the changes
@@ -122,7 +129,7 @@ class ServiceController extends Controller
     // Delete
     public function destroy($id)
     {
-        $service = Service::find($id);
+        $service = ServiceSpecial::find($id);
 
         if (!$service) {
             return response()->json([

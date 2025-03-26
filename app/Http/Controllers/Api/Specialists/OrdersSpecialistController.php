@@ -44,11 +44,11 @@ class OrdersSpecialistController extends Controller
     }
     public function order_finished(Request $request)
     {
-        $orders = Order::where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('id', $request->order_id)->update([
-                'status' => 'finished ',
+        $orders = Order::where('user_id', Auth::guard('user-api')->user()->id)->where('id', $request->order_id)->update([
+                'status' => 'finished',
 
             ]);
-            $order=Order::where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('id', $request->order_id)->first();
+            $order=Order::where('user_id', Auth::guard('user-api')->user()->id)->where('id', $request->order_id)->first();
             try {
                 $this->send_notify_user($order->user_id);
               //  $this->send_notify_provider($request->specialist_id);
@@ -64,11 +64,11 @@ class OrdersSpecialistController extends Controller
     }
     public function order_cancelled(Request $request)
     {
-        $orders = Order::where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('id', $request->order_id)->update([
-            'status' => 'cancelled ',
+        $orders = Order::where('user_id', Auth::guard('user-api')->user()->id)->where('id', $request->order_id)->update([
+            'status' => 'cancelled',
 
         ]);
-        $order=Order::where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('id', $request->order_id)->first();
+        $order=Order::where('user_id', Auth::guard('user-api')->user()->id)->where('id', $request->order_id)->first();
         try {
             $this->send_notify_user($order->user_id);
           //  $this->send_notify_provider($request->specialist_id);
@@ -78,7 +78,7 @@ class OrdersSpecialistController extends Controller
     RejectionReason::create([
         'order_id'=> $request->order_id,
         'description'=>$request->description,
-        'specialist_id'=> Auth::guard('specialist-api')->user()->id,
+        'specialist_id'=> $order->specialist_id,
         'type'=>'order',
 
     ]);
@@ -93,11 +93,11 @@ class OrdersSpecialistController extends Controller
     {
 
         $orders = OrderNormal::where('id', $request->order_id)->update([
-            'status' => 'finished ',
+            'status' => 'finished',
 
         ]);
-        $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('order_id', $request->order_id)->update([
-            'status' => 'finished ',
+        $data = OrderNormalSpecialist::where('order_id', $request->order_id)->update([
+            'status' => 'finished',
 
         ]);
         $order=OrderNormal::where('id', $request->order_id)->first();
@@ -121,14 +121,14 @@ class OrdersSpecialistController extends Controller
             'status' => 'cancelled',
 
         ]);
-        $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('order_id', $request->order_id)->update([
+        $data = OrderNormalSpecialist::where('order_id', $request->order_id)->update([
             'status' => 'cancelled',
 
         ]);
         RejectionReason::create([
             'order_id' => $request->order_id,
             'description' => $request->description,
-            'specialist_id' => Auth::guard('specialist-api')->user()->id,
+            'specialist_id' =>$order->specialist_id ?? null,
             'type' => 'normal_order',
 
         ]);
@@ -151,7 +151,7 @@ class OrdersSpecialistController extends Controller
 
         $orders = OrderService::where('id', $request->order_id)->update([
             'specialist_id'=> Auth::guard('specialist-api')->user()->id,
-            'status' => 'finished ',
+            'status' => 'finished',
 
         ]);
 

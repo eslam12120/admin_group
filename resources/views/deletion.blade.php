@@ -128,12 +128,12 @@ footer {
     <main>
         <section class="content">
             <h1>Account Deletion Request</h1>
-            <p>We understand that you may want to delete your account and all associated data from our Aftergelow System. To ensure your privacy and data security, we have made the account deletion process straightforward and secure.</p>
+            <p>We understand that you may want to delete your account and all associated data from our Admin Group System. To ensure your privacy and data security, we have made the account deletion process straightforward and secure.</p>
 
             <h2>Steps To Delete Your Account:</h2>
             <ol>
                 <li><strong>Submit a Deletion Request:</strong>
-                    <p>Email us at <a href="mailto:afterglow1100@gmail.com">afterglow1100@gmail.com</a> with the subject line “Account Deletion Request.”</p>
+                    <p>Email us at <a href="mailto:adgr9844@gmail.com">adgr9844@gmail.com</a> with the subject line “Account Deletion Request.”</p>
                     <p>In the body of the email, include your full name, registered email address, and a brief explanation of your request.</p>
                 </li>
                 <li><strong>Verification:</strong>
@@ -153,7 +153,7 @@ footer {
 
             <h2>Contact Us</h2>
             <p>If you have any questions or need assistance with the account deletion process, please do not hesitate to contact us at:</p>
-            <p>Email: <a href="mailto:afterglow1100@gmail.com ">afterglow1100@gmail.com </a><br>
+            <p>Email: <a href="mailto:adgr9844@gmail.com ">adgr9844@gmail.com </a><br>
                Phone: +20 11 58368887<br>
 </p>
         </section>
@@ -181,7 +181,7 @@ footer {
             </div>
             <div>
                 <h4>Contact Information :</h4>
-                <p>Email: <a href="mailto:afterglow1100@gmail.com">afterglow1100@gmail.com </a></p>
+                <p>Email: <a href="mailto:adgr9844@gmail.com">adgr9844@gmail.com </a></p>
                 <p>Phone: +20 11 58368887</p>
                 <div class="social-media">
                 </div>

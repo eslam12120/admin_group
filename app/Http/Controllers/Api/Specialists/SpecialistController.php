@@ -74,7 +74,7 @@ class SpecialistController extends Controller
                     'phone' => $request->phone,
                     'email' => $request->email,
                     'rate' => $request->rate ?? 0,
-                    'yxp' => $request->exp_years ?? 0,
+                    'yxp' => $request->yxp ?? 0,
                     'price' => $request->price ?? 0,
                     'about_me' => $request->about_me,
                     'status' => $request->status,
@@ -143,6 +143,18 @@ class SpecialistController extends Controller
                         ]);
                     }
                 }
+                 $user_otp = SpecialistVerification::where('specialist_id', $specialist->id)->latest()->first();
+                if ($user_otp) {
+                    $user_otp->delete();
+                }
+
+                $code = mt_rand(100000, 999999);
+                $user_verification = SpecialistVerification::create([
+
+                    'specialist_id' => $specialist->id,
+                    'code' => $code,
+                ]);
+                Mail::to($request->email)->send(new OtpCode($code));
                 DB::commit();
             } else {
                 // 1. إنشاء المختص في جدول specialists
@@ -151,7 +163,7 @@ class SpecialistController extends Controller
                     'phone' => $request->phone,
                     'email' => $request->email,
                     'rate' => $request->rate ?? 0,
-                    'yxp' => $request->exp_years ?? 0,
+                    'yxp' => $request->yxp ?? 0,
                     'price' => $request->price ?? 0,
                     'about_me' => $request->about_me,
                     'status' => $request->status,
@@ -221,6 +233,18 @@ class SpecialistController extends Controller
                         ]);
                     }
                 }
+                $user_otp = SpecialistVerification::where('specialist_id', $specialist->id)->latest()->first();
+                if ($user_otp) {
+                    $user_otp->delete();
+                }
+
+                $code = mt_rand(100000, 999999);
+                $user_verification = SpecialistVerification::create([
+
+                    'specialist_id' => $specialist->id,
+                    'code' => $code,
+                ]);
+                Mail::to($request->email)->send(new OtpCode($code));
                 DB::commit();
             }
             return response()->json([
@@ -367,7 +391,7 @@ class SpecialistController extends Controller
         $city = City::select('id', 'name_' . app()->getLocale() . ' as name')->get();
         $government = Government::select('id', 'name_' . app()->getLocale() . ' as name')->get();
         $languages = Language::select('id', 'name_' . app()->getLocale() . ' as name')->get();
-        $specials = Special::select('id', 'name_' . app()->getLocale() . ' as name', 'job_name_' . app()->getLocale() . ' as job_name')->get();
+        $specials = Special::where('active','1')->select('id', 'name_' . app()->getLocale() . ' as name', 'job_name_' . app()->getLocale() . ' as job_name')->get();
         return response()->json([
             'message' => 'success',
             'cities' =>  $city,
@@ -381,7 +405,7 @@ class SpecialistController extends Controller
         $specialistId = Auth::guard('specialist-api')->user()->id;
 
         // Get pending orders
-        $orders = Order::with(['user', 'special_order' => function ($q) {
+        $orders = Order::orderBy('id','desc')->with(['user', 'special_order' => function ($q) {
                 $q->select('id', 'name_' . app()->getLocale() . ' as name');
             }])
             ->where('specialist_id', $specialistId)
@@ -396,7 +420,7 @@ class SpecialistController extends Controller
 
         // Get pending normal orders
         $normalOrderData = OrderNormalSpecialist::where('specialist_id', $specialistId)->get();
-        $normalOrders = OrderNormal::with([
+        $normalOrders = OrderNormal::orderBy('id','desc')->with([
             'user',
             'special_order' => function ($q) {
                 $q->select('id', 'name_' . app()->getLocale() . ' as name');
@@ -420,7 +444,7 @@ class SpecialistController extends Controller
         });
 
         // Get active service orders
-        $serviceOrders = OrderService::where('status', 'active')
+        $serviceOrders = OrderService::orderBy('id','desc')->where('status', 'active')
             ->with([
                 'user',
                 'service_special' => function ($q) {
@@ -454,7 +478,7 @@ class SpecialistController extends Controller
     public function getSpecialistData()
     {
         // Fetch specialist data based on ID, including city and government relations
-        $specialist = Specialist::where('id', Auth::id())
+        $specialist = Specialist::where('id', Auth::guard('specialist-api')->user()->id)
             ->with([
                 'city' => function ($q) {
                     $q->select('id', 'name_' . app()->getLocale() . ' as name');

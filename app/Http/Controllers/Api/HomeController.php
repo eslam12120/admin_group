@@ -53,7 +53,8 @@ class HomeController extends Controller
         ])->where('status', '1')->orderBy('rate', 'desc')->take(5)->latest()->get()->map(function ($specialist) use ($lang) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
             $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')->where('specialist_id', $specialist->id)->get();
+            $sp= SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name','special_id')->where('specialist_id', $specialist->id)->pluck('special_id');
+            $specialist->job = Special::whereIn('id' , $sp)->select('id', 'name_' . $lang . ' as name')->get();
             return $specialist;
         });
         return response()->json([
@@ -75,7 +76,8 @@ class HomeController extends Controller
         ])->where('status', '1')->orderBy('rate', 'desc')->get()->map(function ($specialist) use ($lang) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
             $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name')->where('specialist_id', $specialist->id)->get();
+            $sp= SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name','special_id')->where('specialist_id', $specialist->id)->pluck('special_id');
+            $specialist->job = Special::whereIn('id' , $sp)->select('id', 'name_' . $lang . ' as name')->get();
             return $specialist;
         });
         $services = Service::select('id', $nameColumn . ' as name', 'image', 'description_' . $lang . ' as description')->where('name_ar', 'LIKE', '%' . $request->search . '%')->where('active', '1')->orWhere('active', '1')->where('name_en', 'LIKE', '%' . $request->search . '%')->get();
@@ -225,9 +227,8 @@ class HomeController extends Controller
         $specialists = $query->paginate(30)->through(function ($specialist) use ($lang) {
             $specialist->image_url = asset('specialist_images/' . $specialist->image);
             $specialist->rate_count = Rate::where('specialist_id', $specialist->id)->count();
-            $specialist->job = SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name', 'special_id')
-                ->where('specialist_id', $specialist->id)
-                ->get();
+             $sp= SpecialistSpecial::select('id', 'job_name_' . $lang . ' as name','special_id')->where('specialist_id', $specialist->id)->pluck('special_id');
+            $specialist->job = Special::whereIn('id' , $sp)->select('id', 'name_' . $lang . ' as name')->get();
             return $specialist;
         });
 
@@ -244,6 +245,7 @@ class HomeController extends Controller
             'specialist_id' => $request->specialist_id,
             'status' => 'pending',
             'type_payment' => $request->type_payment,
+            'status_payment' => $request->type_payment == 'cash' ? 'paid' : 'not_paid',
             'type_com' => $request->type_com,
             'desc' => $request->desc,
             'address' => $request->address,
@@ -264,7 +266,7 @@ class HomeController extends Controller
         try {
             $this->send_notify_user(Auth::id());
             $this->send_notify_provider($request->specialist_id);
-        } catch (\Exception $e) {
+       } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Notification failed: ' . $e->getMessage());
         }
         return response()->json([
@@ -300,7 +302,7 @@ class HomeController extends Controller
             try {
                 $title = "طلب جديد";
                 $message = "تم استقبال  طلبك بنجاح ";
-                $this->save_notify_place($title, $message,  $provider_id);
+                $this->save_notify_prov($title, $message,  $provider_id);
                 if ($user->device_token) {
                     (new SavePushNotificationSpecialist($title, $message))->toFirebase($user->device_token);
                     return 1;
@@ -321,7 +323,7 @@ class HomeController extends Controller
             try {
                 $title = "حالة الطلب  ";
                 $message = "تم تعديل حالة   طلبك  قم بمراجعتتها  ";
-                $this->save_notify_place($title, $message,  $provider_id);
+                $this->save_notify_prov($title, $message,  $provider_id);
                 if ($user->device_token) {
                     (new SavePushNotificationSpecialist($title, $message))->toFirebase($user->device_token);
                     return 1;
@@ -340,9 +342,33 @@ class HomeController extends Controller
     {
         Notification::create([
             'title' => $title,
-            'message' => $message,
-            'receiver_id' => $user_id,
+            'body' => $message,
+            'reciever_id' => $user_id,
             'specialist_id' => null,
+            'is_read' => '0',
+            'sender_id' => 0,
+        ]);
+        /*
+        DB::table('tbl_place_notification_orders')->insert([
+            'title' => $title,
+            'message' => $message,
+            'receiver_id' => $place_id,
+            'sender_type' => 'App\Models\User',
+            'is_read' => '0',
+            'sender_id' => $user_id,
+            'place_id' => $place_id
+        ]);
+        return 1;
+        */
+        return 1;
+    }
+    public function save_notify_prov($title, $message, $user_id)
+    {
+        Notification::create([
+            'title' => $title,
+            'body' => $message,
+            'reciever_id' => null,
+            'specialist_id' => $user_id,
             'is_read' => '0',
             'sender_id' => 0,
         ]);
@@ -504,6 +530,7 @@ class HomeController extends Controller
             'user_id' => Auth::id(),
             'coupoun_id' => $request->coupoun_id,
             'audio_path' => $audioPath, // Save audio path
+            'status_payment' => $request->type_payment == 'cash' ? 'paid' : 'not_paid',
             // 'file_path' => $filePath, // Save file path
         ]);
         if ($request->coupoun_id) {
@@ -512,13 +539,11 @@ class HomeController extends Controller
                 'coupoun_id' => $request->coupoun_id,
             ]);
         }
-        if ($request->specialist_id && is_array($request->specialist_id)) {
-            foreach ($request->specialist_id as $specialistId) {
+        if ($request->specialist_id) {
                 OrderNormalSpecialist::create([
-                    'specialist_id' => $specialistId,
+                    'specialist_id' => $request->specialist_id,
                     'order_id' => $order->id, // Ensure $order->id is valid
                 ]);
-            }
         }
         if ($filePaths) {
             foreach ($filePaths as $filePath) {
@@ -602,6 +627,7 @@ class HomeController extends Controller
             'coupoun_id' => $request->coupoun_id,
             'service_special_id' => $request->service_special_id,
             'audio_path' => $audioPath, // Save audio path
+            'status_payment' => $request->type_payment == 'cash' ? 'paid' : 'not_paid',
             //   'file_path' => $filePath, // Save file path
         ]);
         if ($request->coupoun_id) {
@@ -655,7 +681,8 @@ class HomeController extends Controller
         $specialist = Negotation::where('id', $request->id)->first();
         OrderService::where('id', $request->order_id)->update([
             'status' => 'pending',
-            'specialist_id' => $specialist->specialist_id ?? null
+            'specialist_id' => $specialist->specialist_id ?? null,
+            'price'=> $specialist->price
         ]);
         try {
             //    $this->send_notify_user(Auth::id());
