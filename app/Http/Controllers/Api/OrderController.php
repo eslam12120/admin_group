@@ -17,10 +17,10 @@ class OrderController extends Controller
     public function orders(Request $request)
     {
         $status = $request->status;
-        $validStatuses = ['pending', 'schedule', 'finished'];
+        $validStatuses = ['pending', 'schedule', 'finished','cancelled'];
 
         if (in_array($status, $validStatuses)) {
-            $orders = Order::where('user_id', Auth::id())
+            $orders = Order::orderBy('id', 'desc')->where('user_id', Auth::id())
                 ->where('status', $status)
                 ->with('specialist.special_order') // Include specialist and special
                 ->get();
@@ -47,8 +47,8 @@ class OrderController extends Controller
 
     public function normal_orders(Request $request)
     {
-        $status = $request->status == 'pending' ? 'pending' : 'finished';
-        $orders = OrderNormal::with(['ordernormal', 'orderfiles'])
+        $status = $request->status == 'pending' ? 'pending' : ($request->status == 'cancelled' ? 'cancelled' : 'finished');
+        $orders = OrderNormal::orderBy('id', 'desc')->with(['ordernormal', 'orderfiles'])
             ->where('user_id', Auth::id())
             ->where('status', $status)
             ->get();
@@ -91,7 +91,7 @@ class OrderController extends Controller
     public function orderservices(Request $request)
     {
         $status = $request->status;
-        $orders = OrderService::where('user_id', Auth::id())
+        $orders = OrderService::orderBy('id', 'desc')->where('user_id', Auth::id())
             ->with(['specialist.special_order', 'orderfiles']) // Include 'special' relation
             ->where('status', $status)
             ->get();

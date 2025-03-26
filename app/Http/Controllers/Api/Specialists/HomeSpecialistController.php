@@ -18,7 +18,7 @@ class HomeSpecialistController extends Controller
 {
     public function getdata()
     {
-        $data = OrderService::where('status', 'active')->with([
+        $data = OrderService::orderBy('id', 'desc')->where('status', 'active')->with([
             'service_special' => function ($q) {
                 $q->select('id', 'name_' . app()->getLocale() . ' as name');
             }
@@ -70,7 +70,13 @@ class HomeSpecialistController extends Controller
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
-
+        
+ if (Negotation::where('order_id',$request->order_id)->whereIn('status', ['pending','approved'])->where('specialist_id' , Auth::guard('specialist-api')->user()->id)->exists()) {
+            return Response::json([
+            'status' => 422,
+            'message' => 'تم تقديم طلب من قبل ',
+        ]);
+        }
         Negotation::create([
             'order_id' => $request->order_id,
             'user_id' => $request->user_id,
@@ -88,7 +94,7 @@ class HomeSpecialistController extends Controller
 
     public function get_all_schadule_orders()
     {
-        $data = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'schedule')->get();
+        $data = Order::orderBy('id', 'desc')->with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'schedule')->get();
 
         $data->transform(function ($order) {
             if ($order->user) {
@@ -105,7 +111,7 @@ class HomeSpecialistController extends Controller
 
     public function get_all_finished_orders()
     {
-        $data = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
+        $data = Order::orderBy('id', 'desc')->with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'finished')->get();
 
         $data->transform(function ($order) {
             if ($order->user) {
@@ -122,7 +128,7 @@ class HomeSpecialistController extends Controller
 
     public function get_all_cancelled_orders()
     {
-        $data = Order::with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
+        $data = Order::orderBy('id', 'desc')->with(['user'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'cancelled')->get();
 
         $data->transform(function ($order) {
             if ($order->user) {
@@ -139,7 +145,7 @@ class HomeSpecialistController extends Controller
 
     public function get_all_pending_service_orders()
     {
-        $data = OrderService::with(['user', 'orderfiles'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'pending')->get();
+        $data = OrderService::orderBy('id', 'desc')->with(['user', 'orderfiles'])->where('specialist_id', Auth::guard('specialist-api')->user()->id)->where('status', 'pending')->get();
 
         $data->transform(function ($order) {
             $order->audio_path_url = asset('uploads/files/' . $order->audio_path);
@@ -166,7 +172,7 @@ class HomeSpecialistController extends Controller
 
     public function get_all_finished_service_orders()
     {
-        $data = OrderService::with([
+        $data = OrderService::orderBy('id', 'desc')->with([
             'user',
             'service_special' => function ($q) {
                 $q->select('id', 'name_' . app()->getLocale() . ' as name');
@@ -195,7 +201,7 @@ class HomeSpecialistController extends Controller
 
     public function get_all_cancelled_service_orders()
     {
-        $data = OrderService::with([
+        $data = OrderService::orderBy('id', 'desc')->with([
             'user',
             'service_special' => function ($q) {
                 $q->select('id', 'name_' . app()->getLocale() . ' as name');
@@ -225,7 +231,7 @@ class HomeSpecialistController extends Controller
     public function get_all_finished_normal_orders()
     {
         $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
-        $normal_order = OrderNormal::with(['user'])->whereIn('id', $data->pluck('order_id'))->where('status', 'finished')->get();
+        $normal_order = OrderNormal::orderBy('id', 'desc')->with(['user'])->whereIn('id', $data->pluck('order_id'))->where('status', 'finished')->get();
 
         $normal_order->transform(function ($order) {
             if ($order->user) {
@@ -250,7 +256,7 @@ class HomeSpecialistController extends Controller
     public function get_all_cancelled_normal_orders()
     {
         $data = OrderNormalSpecialist::where('specialist_id', Auth::guard('specialist-api')->user()->id)->get();
-        $normal_order = OrderNormal::with(['user'])->whereIn('id', $data->pluck('order_id'))->where('status', 'cancelled')->get();
+        $normal_order = OrderNormal::orderBy('id', 'desc')->with(['user'])->whereIn('id', $data->pluck('order_id'))->where('status', 'cancelled')->get();
 
         $normal_order->transform(function ($order) {
             if ($order->user) {

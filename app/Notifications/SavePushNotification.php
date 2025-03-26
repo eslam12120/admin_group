@@ -25,7 +25,7 @@ class SavePushNotification extends Notification
         $this->message = $message;
 
         $this->firebaseMessaging = (new Factory)
-            ->withServiceAccount(base_path(env('FIREBASE_CREDENTIALS')))
+            ->withServiceAccount(storage_path('app/firebase/admingroup-517c9-firebase-adminsdk-fbsvc-a1b43e4910.json'))
             ->createMessaging();
     }
 

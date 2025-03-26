@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PaymentController;
 use App\Models\Specialist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -58,10 +59,17 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
 
     Route::group(['middleware' => 'checkUser:user-api'], function () {
 
-
+        Route::get('pay/order/place', [PaymentController::class, 'payment_url']);
+        Route::get('get/status/payment', [PaymentController::class, 'get_status_payment']);
         Route::get('get/orders', [OrderController::class, 'orders']);
         Route::get('get/normal-orders', [OrderController::class, 'normal_orders']);
         Route::get('get/order-services', [OrderController::class, 'orderservices']);
+
+        Route::post('specialist/orders/finished', [OrdersSpecialistController::class, 'order_finished']);
+        Route::post('specialist/orders/cancelled', [OrdersSpecialistController::class, 'order_cancelled']);
+        Route::post('specialist/normal/orders/finished', [OrdersSpecialistController::class, 'normal_order_finished']);
+        Route::post('specialist/normal/orders/cancelled', [OrdersSpecialistController::class, 'normal_order_cancelled']);
+
 
         Route::post('user/logout', [AuthController::class, 'logout']);
         Route::get('user/getUserData', [AuthController::class, 'getUserData']);
@@ -114,10 +122,6 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
         Route::get('specialist_notifications', [HomeController::class, 'specialistNotifications'])->name('userNotifications');
         Route::get('specialist_read_notifications', [HomeController::class, 'specialistread_notifications'])->name('read_notifications');
         Route::post('specialist/orders/schadule', [OrdersSpecialistController::class, 'order_schadule']);
-        Route::post('specialist/orders/finished', [OrdersSpecialistController::class, 'order_finished']);
-        Route::post('specialist/orders/cancelled', [OrdersSpecialistController::class, 'order_cancelled']);
-        Route::post('specialist/normal/orders/finished', [OrdersSpecialistController::class, 'normal_order_finished']);
-        Route::post('specialist/normal/orders/cancelled', [OrdersSpecialistController::class, 'normal_order_cancelled']);
         Route::post('specialist/activate/account', [SpecialistController::class, 'activate_account']);
         Route::post('specialist/unactivate/account', [SpecialistController::class, 'unactivate_account']);
         Route::get('specialist/get/all/finished/orders', [HomeSpecialistController::class, 'get_all_finished_orders']);
